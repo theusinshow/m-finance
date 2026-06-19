@@ -32,9 +32,15 @@ function setHiddenPreference(next: boolean) {
 }
 
 /**
- * Hero balance with a privacy toggle persisted in localStorage.
+ * Hero figure with a privacy toggle persisted in localStorage.
  */
-export function BalanceDisplay({ cents }: { cents: number }) {
+export function BalanceDisplay({
+  cents,
+  label = "Sobra prevista",
+}: {
+  cents: number;
+  label?: string;
+}) {
   const masked = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   function toggle() {
@@ -44,11 +50,9 @@ export function BalanceDisplay({ cents }: { cents: number }) {
   return (
     <div>
       <div className="flex items-center gap-2">
-        <p className="text-sm font-medium uppercase tracking-[0.16em] text-text-muted">
-          Sobra prevista
-        </p>
+        <p className="text-sm font-medium uppercase tracking-[0.16em] text-text-muted">{label}</p>
         <button
-          aria-label={masked ? "Mostrar saldo" : "Esconder saldo"}
+          aria-label={masked ? "Mostrar valor" : "Esconder valor"}
           className="focus-ring inline-flex h-7 w-7 items-center justify-center rounded-md text-text-muted transition duration-200 hover:bg-background-elevated hover:text-text-primary"
           onClick={toggle}
           type="button"

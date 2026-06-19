@@ -1,3 +1,4 @@
+import { CheckCircle2 } from "lucide-react";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { CreateCurrentMonthCard } from "@/components/dashboard/create-current-month-card";
 import { EmptyState } from "@/components/empty-state";
@@ -44,6 +45,9 @@ export default async function DashboardPage() {
     bills: realBills,
     invoices: realInvoices,
   });
+  const totalOutstandingCents = summary.totalPendingCents + summary.totalOverdueCents;
+  const totalCommittedCents = summary.totalBillsCents + summary.totalInvoicesCents;
+  const allSettled = totalCommittedCents > 0 && totalOutstandingCents === 0;
   const alerts = calculateInternalAlerts([
     ...realBills.map((bill) => ({
       id: bill.id,
@@ -79,10 +83,33 @@ export default async function DashboardPage() {
                     : formatMonthLabel()}
                 </span>
               </div>
-              <BalanceDisplay cents={summary.estimatedRemainingCents} />
-              <p className="mt-4 max-w-xl text-sm leading-6 text-text-secondary">
-                Depois das contas e faturas cadastradas neste mês. Alertas aparecem quando
-                houver vencimentos próximos ou atrasados.
+              <BalanceDisplay cents={totalOutstandingCents} label="Falta pagar neste mês" />
+
+              {allSettled ? (
+                <p className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-status-positive">
+                  <CheckCircle2 size={16} aria-hidden="true" />
+                  Tudo pago neste mês. Nada vencendo por aqui.
+                </p>
+              ) : (
+                <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
+                  {summary.totalOverdueCents > 0 ? (
+                    <span className="num font-semibold text-accent">
+                      {formatCurrency(summary.totalOverdueCents)} vencido
+                    </span>
+                  ) : null}
+                  <span className="num text-text-secondary">
+                    {formatCurrency(summary.totalPendingCents)} a vencer
+                  </span>
+                  <span className="num text-text-muted">
+                    {formatCurrency(summary.totalPaidCents)} pago de{" "}
+                    {formatCurrency(totalCommittedCents)}
+                  </span>
+                </div>
+              )}
+
+              <p className="mt-4 max-w-xl text-sm leading-6 text-text-muted">
+                Sobra estimada de {formatCurrency(summary.estimatedRemainingCents)} depois de tudo
+                pago (receita menos despesas e faturas do mês).
               </p>
             </div>
             <div className="flex flex-col gap-3 lg:w-72">
