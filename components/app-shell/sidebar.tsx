@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarDays,
+  Calculator,
   CreditCard,
   History,
   LayoutDashboard,
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/app/calendar", label: "Calendário", icon: CalendarDays },
   { href: "/app/bills", label: "Despesas", icon: ReceiptText },
   { href: "/app/cards", label: "Cartões", icon: CreditCard },
+  { href: "/app/simulator", label: "Simulador", icon: Calculator },
   { href: "/app/history", label: "Histórico", icon: History },
   { href: "/app/settings", label: "Configurações", icon: Settings },
 ] as const;

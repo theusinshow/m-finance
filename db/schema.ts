@@ -3,6 +3,7 @@ import {
   check,
   date,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -26,6 +27,8 @@ export const alertType = pgEnum("alert_type", [
 export const alertEntityType = pgEnum("alert_entity_type", ["bill", "invoice", "month"]);
 export const alertSeverity = pgEnum("alert_severity", ["info", "warning", "danger"]);
 export const monthHealth = pgEnum("month_health", ["positive", "fair", "tight", "negative"]);
+export const paymentType = pgEnum("payment_type", ["cash", "installment"]);
+export const riskLevel = pgEnum("risk_level", ["safe", "controlled", "tight", "critical"]);
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -200,6 +203,33 @@ export const monthlySnapshots = pgTable("monthly_snapshots", {
   ...timestamps,
 });
 
+export const purchaseSimulations = pgTable(
+  "purchase_simulations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    totalAmountCents: integer("total_amount_cents").notNull(),
+    paymentType: paymentType("payment_type").notNull(),
+    installments: integer("installments"),
+    startMonth: integer("start_month").notNull(),
+    startYear: integer("start_year").notNull(),
+    monthlyImpactCents: integer("monthly_impact_cents").notNull(),
+    riskLevel: riskLevel("risk_level").notNull(),
+    recommendation: text("recommendation").notNull(),
+    resultPayload: jsonb("result_payload").notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    check("purchase_simulations_total_positive", sql`${table.totalAmountCents} > 0`),
+    check("purchase_simulations_start_month_range", sql`${table.startMonth} between 1 and 12`),
+    check(
+      "purchase_simulations_installments_valid",
+      sql`${table.installments} is null or ${table.installments} >= 1`,
+    ),
+  ],
+);
+
 export const settings = pgTable("settings", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
@@ -212,3 +242,5 @@ export const settings = pgTable("settings", {
 export type BillStatus = (typeof billStatus.enumValues)[number];
 export type InvoiceStatus = (typeof invoiceStatus.enumValues)[number];
 export type MonthHealth = (typeof monthHealth.enumValues)[number];
+export type PaymentType = (typeof paymentType.enumValues)[number];
+export type RiskLevel = (typeof riskLevel.enumValues)[number];
