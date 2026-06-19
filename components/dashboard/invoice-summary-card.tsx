@@ -5,6 +5,7 @@ import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
 import { ValidatedForm, ValidatedInput } from "@/components/ui/validated-form";
+import { CardBrandMark } from "@/components/cards/card-brand-mark";
 import { InlineEmpty } from "@/components/ui/inline-empty";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
@@ -33,16 +34,21 @@ export function InvoiceSummaryCard({ invoices }: { invoices: Invoice[] }) {
         ) : invoices.map((invoice) => (
           <div className="rounded-lg border border-border-subtle bg-background-elevated p-4" key={invoice.id}>
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold text-text-primary">{invoice.name}</p>
-                  {invoice.cardType === "business" ? (
-                    <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">
-                      PJ
-                    </span>
-                  ) : null}
+              <div className="flex items-start gap-3">
+                <CardBrandMark name={invoice.name} />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-text-primary">{invoice.name}</p>
+                    {invoice.cardType === "business" ? (
+                      <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">
+                        PJ
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-sm text-text-muted">
+                    Vence {formatShortDate(invoice.dueDate)}
+                  </p>
                 </div>
-                <p className="mt-1 text-sm text-text-muted">Vence {formatShortDate(invoice.dueDate)}</p>
               </div>
               <StatusBadge status={invoice.status} />
             </div>

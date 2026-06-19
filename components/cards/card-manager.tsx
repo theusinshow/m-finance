@@ -4,6 +4,7 @@ import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
 import { ValidatedForm, ValidatedInput, ValidatedSelect } from "@/components/ui/validated-form";
+import { CardBrandMark } from "@/components/cards/card-brand-mark";
 import { InlineEmpty } from "@/components/ui/inline-empty";
 
 type ManagedCard = {
@@ -87,23 +88,26 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
                 key={card.id}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-text-primary">{card.name}</p>
-                      {card.cardType === "business" ? (
-                        <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">
-                          PJ
-                        </span>
-                      ) : null}
-                      {!card.isActive ? (
-                        <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">
-                          Inativo
-                        </span>
-                      ) : null}
+                  <div className="flex items-start gap-3">
+                    <CardBrandMark name={card.name} />
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-text-primary">{card.name}</p>
+                        {card.cardType === "business" ? (
+                          <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">
+                            PJ
+                          </span>
+                        ) : null}
+                        {!card.isActive ? (
+                          <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">
+                            Inativo
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 text-sm text-text-muted">
+                        {cardTypeLabel[card.cardType]} · vence dia {card.dueDay}
+                      </p>
                     </div>
-                    <p className="mt-1 text-sm text-text-muted">
-                      {cardTypeLabel[card.cardType]} · vence dia {card.dueDay}
-                    </p>
                   </div>
                   <ToastForm
                     action={setCardActive}
