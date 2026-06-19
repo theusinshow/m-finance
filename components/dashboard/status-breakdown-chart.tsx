@@ -1,6 +1,6 @@
 "use client";
 
-import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { Cell, Pie, PieChart } from "recharts";
 import { InlineEmpty } from "@/components/ui/inline-empty";
 import { formatCurrency } from "@/lib/formatters/currency";
 
@@ -36,22 +36,22 @@ export function StatusBreakdownChart({
   return (
     <div className="flex flex-col items-center gap-5 sm:flex-row sm:gap-6">
       <div className="relative h-40 w-40 shrink-0">
-        <ResponsiveContainer height="100%" width="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              innerRadius={52}
-              outerRadius={72}
-              paddingAngle={data.length > 1 ? 2 : 0}
-              stroke="none"
-            >
-              {data.map((slice) => (
-                <Cell fill={slice.color} key={slice.name} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+        {/* Fixed 160px box, so an explicit-size PieChart avoids the
+            ResponsiveContainer measuring to -1 during SSR/first paint. */}
+        <PieChart height={160} width={160}>
+          <Pie
+            data={data}
+            dataKey="value"
+            innerRadius={52}
+            outerRadius={72}
+            paddingAngle={data.length > 1 ? 2 : 0}
+            stroke="none"
+          >
+            {data.map((slice) => (
+              <Cell fill={slice.color} key={slice.name} />
+            ))}
+          </Pie>
+        </PieChart>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">
             Total
