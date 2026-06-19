@@ -2,6 +2,7 @@ import { saveCurrentMonthSnapshot } from "@/app/actions/history";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EmptyState } from "@/components/empty-state";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { ToastForm } from "@/components/toast-form";
 import { PageHeading } from "@/components/page-heading";
 import { StatusBadge } from "@/components/status-badge";
 import { requireUser } from "@/lib/auth/guard";
@@ -32,9 +33,9 @@ export default async function HistoryPage() {
   return (
     <div className="space-y-6">
       <PageHeading eyebrow="Histórico" title="Resumo mensal">
-        <form action={saveCurrentMonthSnapshot}>
+        <ToastForm action={saveCurrentMonthSnapshot} successMessage="Snapshot do mês salvo.">
           <FormSubmitButton pendingLabel="Salvando...">Salvar snapshot do mês atual</FormSubmitButton>
-        </form>
+        </ToastForm>
       </PageHeading>
 
       {snapshots.length === 0 ? (

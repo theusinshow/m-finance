@@ -3,6 +3,7 @@ import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { ToastForm } from "@/components/toast-form";
 import { formatCurrency } from "@/lib/formatters/currency";
 
 type Income = {
@@ -31,7 +32,7 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
       title="Receitas do mês"
     >
       <div className="grid gap-5 xl:grid-cols-[0.85fr_1fr]">
-        <form action={createIncome} className="space-y-4">
+        <ToastForm action={createIncome} successMessage="Receita adicionada." className="space-y-4">
           <div>
             <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="income-name">
               Nome
@@ -94,7 +95,7 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
           </label>
 
           <FormSubmitButton pendingLabel="Adicionando...">Adicionar receita</FormSubmitButton>
-        </form>
+        </ToastForm>
 
         <div className="space-y-3">
           {incomes.length === 0 ? (
@@ -119,7 +120,7 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
                   </p>
                 </div>
                 <EditDisclosure className="mt-4">
-                  <form action={updateIncome} className="grid gap-3">
+                  <ToastForm action={updateIncome} successMessage="Receita atualizada." className="grid gap-3">
                     <input name="incomeId" type="hidden" value={income.id} />
                     <input
                       className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
@@ -158,13 +159,13 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
                     <div className="flex flex-wrap gap-2">
                       <FormSubmitButton pendingLabel="Salvando...">Salvar</FormSubmitButton>
                     </div>
-                  </form>
-                  <form action={deleteIncome} className="mt-2">
+                  </ToastForm>
+                  <ToastForm action={deleteIncome} successMessage="Receita excluída." className="mt-2">
                     <input name="incomeId" type="hidden" value={income.id} />
                     <ConfirmDeleteButton confirmMessage="Excluir esta receita? Essa ação não pode ser desfeita.">
                       Excluir receita
                     </ConfirmDeleteButton>
-                  </form>
+                  </ToastForm>
                 </EditDisclosure>
               </div>
             ))

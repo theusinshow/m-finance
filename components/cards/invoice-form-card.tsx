@@ -1,6 +1,7 @@
 import { createInvoice } from "@/app/actions/invoices";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { ToastForm } from "@/components/toast-form";
 
 type Card = {
   id: string;
@@ -14,7 +15,11 @@ export function InvoiceFormCard({ cards }: { cards: Card[] }) {
       description="Lance só o total do mês. O vencimento usa o dia do próprio cartão."
       title="Adicionar fatura"
     >
-      <form action={createInvoice} className="grid gap-4 md:grid-cols-[1fr_200px_auto] md:items-end">
+      <ToastForm
+        action={createInvoice}
+        successMessage="Fatura adicionada."
+        className="grid gap-4 md:grid-cols-[1fr_200px_auto] md:items-end"
+      >
         <div>
           <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="invoice-card">
             Cartão
@@ -47,7 +52,7 @@ export function InvoiceFormCard({ cards }: { cards: Card[] }) {
           />
         </div>
         <FormSubmitButton pendingLabel="Salvando...">Salvar fatura</FormSubmitButton>
-      </form>
+      </ToastForm>
     </DashboardCard>
   );
 }

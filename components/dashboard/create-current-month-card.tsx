@@ -1,6 +1,7 @@
 import { createCurrentMonth } from "@/app/actions/months";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { ToastForm } from "@/components/toast-form";
 import { formatMonthLabel } from "@/lib/formatters/date";
 
 export function CreateCurrentMonthCard() {
@@ -19,9 +20,9 @@ export function CreateCurrentMonthCard() {
             O app não gera meses automaticamente sem sua confirmação.
           </p>
         </div>
-        <form action={createCurrentMonth}>
+        <ToastForm action={createCurrentMonth} successMessage="Mês atual criado.">
           <FormSubmitButton pendingLabel="Criando...">Criar mês atual</FormSubmitButton>
-        </form>
+        </ToastForm>
       </div>
     </DashboardCard>
   );

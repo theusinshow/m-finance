@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createCategory, setCategoryArchived, updateSettings } from "@/app/actions/settings";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { ToastForm } from "@/components/toast-form";
 import { PageHeading } from "@/components/page-heading";
 import { requireUser } from "@/lib/auth/guard";
 import { getManagedCreditCards } from "@/lib/cards";
@@ -40,7 +41,7 @@ export default async function SettingsPage() {
         </DashboardCard>
 
         <DashboardCard title="Preferências de alerta">
-          <form action={updateSettings} className="space-y-4">
+          <ToastForm action={updateSettings} successMessage="Preferências salvas." className="space-y-4">
             <div>
               <label
                 className="mb-2 block text-sm font-medium text-text-secondary"
@@ -65,13 +66,13 @@ export default async function SettingsPage() {
               </p>
             </div>
             <FormSubmitButton pendingLabel="Salvando...">Salvar preferências</FormSubmitButton>
-          </form>
+          </ToastForm>
         </DashboardCard>
       </section>
 
       <DashboardCard title="Categorias">
         <div className="grid gap-5 xl:grid-cols-[0.7fr_1fr]">
-          <form action={createCategory} className="space-y-4">
+          <ToastForm action={createCategory} successMessage="Categoria adicionada." className="space-y-4">
             <div>
               <label
                 className="mb-2 block text-sm font-medium text-text-secondary"
@@ -88,7 +89,7 @@ export default async function SettingsPage() {
               />
             </div>
             <FormSubmitButton pendingLabel="Adicionando...">Adicionar categoria</FormSubmitButton>
-          </form>
+          </ToastForm>
 
           <div className="space-y-2">
             {categories.length === 0 ? (
@@ -109,7 +110,10 @@ export default async function SettingsPage() {
                       </span>
                     ) : null}
                   </div>
-                  <form action={setCategoryArchived}>
+                  <ToastForm
+                    action={setCategoryArchived}
+                    successMessage={category.isArchived ? "Categoria restaurada." : "Categoria arquivada."}
+                  >
                     <input name="categoryId" type="hidden" value={category.id} />
                     <input
                       name="isArchived"
@@ -122,7 +126,7 @@ export default async function SettingsPage() {
                     >
                       {category.isArchived ? "Restaurar" : "Arquivar"}
                     </FormSubmitButton>
-                  </form>
+                  </ToastForm>
                 </div>
               ))
             )}

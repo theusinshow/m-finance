@@ -2,6 +2,7 @@ import { createCard, setCardActive, updateCard } from "@/app/actions/cards";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { ToastForm } from "@/components/toast-form";
 
 type ManagedCard = {
   id: string;
@@ -23,7 +24,7 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
       title="Gerenciar cartões"
     >
       <div className="grid gap-5 xl:grid-cols-[0.85fr_1fr]">
-        <form action={createCard} className="space-y-4">
+        <ToastForm action={createCard} successMessage="Cartão adicionado." className="space-y-4">
           <div>
             <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="card-name">
               Nome
@@ -72,7 +73,7 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
           </div>
 
           <FormSubmitButton pendingLabel="Adicionando...">Adicionar cartão</FormSubmitButton>
-        </form>
+        </ToastForm>
 
         <div className="space-y-3">
           {cards.length === 0 ? (
@@ -104,7 +105,10 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
                       {cardTypeLabel[card.cardType]} · vence dia {card.dueDay}
                     </p>
                   </div>
-                  <form action={setCardActive}>
+                  <ToastForm
+                    action={setCardActive}
+                    successMessage={card.isActive ? "Cartão inativado." : "Cartão reativado."}
+                  >
                     <input name="cardId" type="hidden" value={card.id} />
                     <input name="isActive" type="hidden" value={card.isActive ? "false" : "true"} />
                     <FormSubmitButton
@@ -113,11 +117,11 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
                     >
                       {card.isActive ? "Inativar" : "Reativar"}
                     </FormSubmitButton>
-                  </form>
+                  </ToastForm>
                 </div>
 
                 <EditDisclosure className="mt-4">
-                  <form action={updateCard} className="grid gap-3">
+                  <ToastForm action={updateCard} successMessage="Cartão atualizado." className="grid gap-3">
                     <input name="cardId" type="hidden" value={card.id} />
                     <input
                       className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
@@ -146,7 +150,7 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
                       />
                     </div>
                     <FormSubmitButton pendingLabel="Salvando...">Salvar cartão</FormSubmitButton>
-                  </form>
+                  </ToastForm>
                 </EditDisclosure>
               </div>
             ))

@@ -65,7 +65,7 @@ export function BillFormCard({
             </div>
           }
         >
-          <form action={createBill} className="grid gap-4 lg:grid-cols-2">
+          <ToastForm action={createBill} successMessage="Despesa adicionada." className="grid gap-4 lg:grid-cols-2">
             <div className="lg:col-span-2">
               <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="bill-name">
                 Nome da despesa
@@ -126,7 +126,7 @@ export function BillFormCard({
             <div className="lg:col-span-2">
               <FormSubmitButton pendingLabel="Adicionando...">Adicionar despesa</FormSubmitButton>
             </div>
-          </form>
+          </ToastForm>
         </AddExpensePanel>
       </DashboardCard>
 
@@ -207,7 +207,7 @@ function BillRow({
       </div>
 
       <EditDisclosure className="mt-3">
-        <form action={updateBill} className="grid gap-3">
+        <ToastForm action={updateBill} successMessage="Despesa atualizada." className="grid gap-3">
           <input name="billId" type="hidden" value={bill.id} />
           <input className={editInputClass} defaultValue={bill.name} name="name" required />
           <div className="grid gap-3 sm:grid-cols-2">
@@ -243,11 +243,11 @@ function BillRow({
             Despesa recorrente
           </label>
           <FormSubmitButton pendingLabel="Salvando...">Salvar despesa</FormSubmitButton>
-        </form>
-        <form action={deleteBill} className="mt-2">
+        </ToastForm>
+        <ToastForm action={deleteBill} successMessage="Despesa excluída." className="mt-2">
           <input name="billId" type="hidden" value={bill.id} />
           <ConfirmDeleteButton confirmMessage="Excluir esta despesa?">Excluir despesa</ConfirmDeleteButton>
-        </form>
+        </ToastForm>
       </EditDisclosure>
     </div>
   );

@@ -67,7 +67,7 @@ export function InvoiceSummaryCard({ invoices }: { invoices: Invoice[] }) {
               )}
             </div>
             <EditDisclosure className="mt-4">
-              <form action={updateInvoice} className="grid gap-3">
+              <ToastForm action={updateInvoice} successMessage="Fatura atualizada." className="grid gap-3">
                 <input name="invoiceId" type="hidden" value={invoice.id} />
                 <div className="grid gap-3 sm:grid-cols-2">
                   <input
@@ -92,13 +92,13 @@ export function InvoiceSummaryCard({ invoices }: { invoices: Invoice[] }) {
                 <FormSubmitButton pendingLabel="Salvando...">
                   Salvar fatura
                 </FormSubmitButton>
-              </form>
-              <form action={deleteInvoice} className="mt-2">
+              </ToastForm>
+              <ToastForm action={deleteInvoice} successMessage="Fatura excluída." className="mt-2">
                 <input name="invoiceId" type="hidden" value={invoice.id} />
                 <ConfirmDeleteButton confirmMessage="Excluir esta fatura? Essa ação não pode ser desfeita.">
                   Excluir fatura
                 </ConfirmDeleteButton>
-              </form>
+              </ToastForm>
             </EditDisclosure>
           </div>
         ))}

@@ -1,6 +1,7 @@
 import { generateNextMonthFromReview } from "@/app/actions/month-generation";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { ToastForm } from "@/components/toast-form";
 import { dayFromIsoDate } from "@/lib/due-date";
 
 type Category = {
@@ -33,7 +34,11 @@ export function MonthGenerationReviewCard({
 
   return (
     <DashboardCard title="Próximo mês">
-      <form action={generateNextMonthFromReview} className="space-y-4">
+      <ToastForm
+        action={generateNextMonthFromReview}
+        successMessage="Próximo mês gerado."
+        className="space-y-4"
+      >
         <div>
           <p className="text-lg font-semibold text-text-primary">Revisar recorrências</p>
           <p className="mt-1 text-sm leading-6 text-text-muted">
@@ -93,7 +98,7 @@ export function MonthGenerationReviewCard({
         </div>
 
         <FormSubmitButton pendingLabel="Gerando...">Gerar próximo mês</FormSubmitButton>
-      </form>
+      </ToastForm>
     </DashboardCard>
   );
 }
