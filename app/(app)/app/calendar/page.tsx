@@ -5,6 +5,7 @@ import { markBillAsPaid } from "@/app/actions/bills";
 import { markInvoiceAsPaid } from "@/app/actions/invoices";
 import { PageHeading } from "@/components/page-heading";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { ToastForm } from "@/components/toast-form";
 import { StatusBadge } from "@/components/status-badge";
 import { requireUser } from "@/lib/auth/guard";
 import { getBillsByMonth } from "@/lib/bills";
@@ -163,7 +164,14 @@ export default async function CalendarPage() {
                         {formatCurrency(event.amountCents)}
                       </p>
                       {event.status !== "paid" ? (
-                        <form action={event.type === "bill" ? markBillAsPaid : markInvoiceAsPaid}>
+                        <ToastForm
+                          action={event.type === "bill" ? markBillAsPaid : markInvoiceAsPaid}
+                          successMessage={
+                            event.type === "bill"
+                              ? "Conta marcada como paga."
+                              : "Fatura marcada como paga."
+                          }
+                        >
                           <input
                             name={event.type === "bill" ? "billId" : "invoiceId"}
                             type="hidden"
@@ -172,7 +180,7 @@ export default async function CalendarPage() {
                           <FormSubmitButton pendingLabel="Marcando..." variant="secondary">
                             Marcar como pago
                           </FormSubmitButton>
-                        </form>
+                        </ToastForm>
                       ) : null}
                     </div>
                   </div>

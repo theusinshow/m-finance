@@ -3,6 +3,7 @@ import { deleteInvoice, markInvoiceAsPaid, markInvoiceAsPending, updateInvoice }
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { ToastForm } from "@/components/toast-form";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatShortDate } from "@/lib/formatters/date";
@@ -50,19 +51,19 @@ export function InvoiceSummaryCard({ invoices }: { invoices: Invoice[] }) {
                 {formatCurrency(invoice.amountCents)}
               </p>
               {invoice.status !== "paid" ? (
-                <form action={markInvoiceAsPaid}>
+                <ToastForm action={markInvoiceAsPaid} successMessage="Fatura marcada como paga.">
                   <input name="invoiceId" type="hidden" value={invoice.id} />
                   <FormSubmitButton pendingLabel="Marcando..." variant="secondary">
                     Marcar como paga
                   </FormSubmitButton>
-                </form>
+                </ToastForm>
               ) : (
-                <form action={markInvoiceAsPending}>
+                <ToastForm action={markInvoiceAsPending} successMessage="Fatura reaberta.">
                   <input name="invoiceId" type="hidden" value={invoice.id} />
                   <FormSubmitButton pendingLabel="Reabrindo..." variant="secondary">
                     Marcar como pendente
                   </FormSubmitButton>
-                </form>
+                </ToastForm>
               )}
             </div>
             <EditDisclosure className="mt-4">

@@ -4,6 +4,7 @@ import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { ToastForm } from "@/components/toast-form";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatShortDate } from "@/lib/formatters/date";
@@ -188,19 +189,19 @@ function BillRow({
         <div className="flex items-center justify-between gap-3 sm:justify-end">
           <p className="num font-semibold text-text-primary">{formatCurrency(bill.amountCents)}</p>
           {paid ? (
-            <form action={markBillAsPending}>
+            <ToastForm action={markBillAsPending} successMessage="Conta reaberta.">
               <input name="billId" type="hidden" value={bill.id} />
               <FormSubmitButton pendingLabel="Reabrindo..." variant="secondary">
                 Reabrir
               </FormSubmitButton>
-            </form>
+            </ToastForm>
           ) : (
-            <form action={markBillAsPaid}>
+            <ToastForm action={markBillAsPaid} successMessage="Conta marcada como paga.">
               <input name="billId" type="hidden" value={bill.id} />
               <FormSubmitButton pendingLabel="Marcando..." variant="success">
                 Pago
               </FormSubmitButton>
-            </form>
+            </ToastForm>
           )}
         </div>
       </div>
