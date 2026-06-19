@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   ReceiptText,
   Settings,
+  Target,
 } from "lucide-react";
 import { TriangleMark } from "@/components/brand/triangle-mark";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ const navItems = [
   { href: "/app/bills", label: "Despesas", icon: ReceiptText },
   { href: "/app/cards", label: "Cartões", icon: CreditCard },
   { href: "/app/simulator", label: "Simulador", icon: Calculator },
+  { href: "/app/goals", label: "Metas", icon: Target },
   { href: "/app/history", label: "Histórico", icon: History },
   { href: "/app/settings", label: "Configurações", icon: Settings },
 ] as const;

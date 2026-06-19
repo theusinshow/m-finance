@@ -29,6 +29,8 @@ export const alertSeverity = pgEnum("alert_severity", ["info", "warning", "dange
 export const monthHealth = pgEnum("month_health", ["positive", "fair", "tight", "negative"]);
 export const paymentType = pgEnum("payment_type", ["cash", "installment"]);
 export const riskLevel = pgEnum("risk_level", ["safe", "controlled", "tight", "critical"]);
+export const goalPriority = pgEnum("goal_priority", ["low", "medium", "high"]);
+export const goalStatus = pgEnum("goal_status", ["active", "paused", "completed", "archived"]);
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -230,6 +232,40 @@ export const purchaseSimulations = pgTable(
   ],
 );
 
+export const goals = pgTable(
+  "goals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    targetAmountCents: integer("target_amount_cents").notNull(),
+    currentAmountCents: integer("current_amount_cents").notNull().default(0),
+    deadline: date("deadline"),
+    priority: goalPriority("priority").notNull().default("medium"),
+    status: goalStatus("status").notNull().default("active"),
+    notes: text("notes"),
+    ...timestamps,
+  },
+  (table) => [
+    check("goals_target_positive", sql`${table.targetAmountCents} > 0`),
+    check("goals_current_not_negative", sql`${table.currentAmountCents} >= 0`),
+  ],
+);
+
+export const goalContributions = pgTable(
+  "goal_contributions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    goalId: uuid("goal_id").notNull().references(() => goals.id, { onDelete: "cascade" }),
+    amountCents: integer("amount_cents").notNull(),
+    contributionDate: date("contribution_date").notNull(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [check("goal_contributions_amount_positive", sql`${table.amountCents} > 0`)],
+);
+
 export const settings = pgTable("settings", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().unique().references(() => users.id, { onDelete: "cascade" }),
@@ -244,3 +280,5 @@ export type InvoiceStatus = (typeof invoiceStatus.enumValues)[number];
 export type MonthHealth = (typeof monthHealth.enumValues)[number];
 export type PaymentType = (typeof paymentType.enumValues)[number];
 export type RiskLevel = (typeof riskLevel.enumValues)[number];
+export type GoalPriority = (typeof goalPriority.enumValues)[number];
+export type GoalStatus = (typeof goalStatus.enumValues)[number];

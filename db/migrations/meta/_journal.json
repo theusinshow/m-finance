@@ -15,6 +15,13 @@
       "when": 1781879469161,
       "tag": "0001_flawless_lorna_dane",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781880364024,
+      "tag": "0002_closed_shocker",
+      "breakpoints": true
     }
   ]
 }
