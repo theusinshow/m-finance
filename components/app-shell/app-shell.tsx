@@ -5,12 +5,18 @@ import { Topbar } from "@/components/app-shell/topbar";
 import { TriangleMark } from "@/components/brand/triangle-mark";
 import { ToastProvider } from "@/components/ui/toast";
 
+type MonthOption = { value: string; label: string; isCurrent: boolean };
+
 export function AppShell({
   children,
   user,
+  monthOptions,
+  activeMonthValue,
 }: {
   children: React.ReactNode;
   user: User;
+  monthOptions: MonthOption[];
+  activeMonthValue: string;
 }) {
   return (
     <ToastProvider>
@@ -29,7 +35,11 @@ export function AppShell({
         </div>
         <Sidebar />
         <div className="min-h-screen lg:pl-72">
-          <Topbar user={user} />
+          <Topbar
+          activeMonthValue={activeMonthValue}
+          monthOptions={monthOptions}
+          user={user}
+        />
           <main className="px-4 pb-24 pt-4 md:px-6 lg:px-8 lg:pb-8">{children}</main>
         </div>
         <MobileNav />

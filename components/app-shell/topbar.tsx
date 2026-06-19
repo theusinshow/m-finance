@@ -2,19 +2,24 @@ import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import { History } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
-import { formatMonthLabel } from "@/lib/formatters/date";
+import { MonthSwitcher } from "@/components/app-shell/month-switcher";
 import { SignOutButton } from "@/components/sign-out-button";
 
-export function Topbar({ user }: { user: User }) {
+type MonthOption = { value: string; label: string; isCurrent: boolean };
+
+export function Topbar({
+  user,
+  monthOptions,
+  activeMonthValue,
+}: {
+  user: User;
+  monthOptions: MonthOption[];
+  activeMonthValue: string;
+}) {
   return (
     <header className="sticky top-0 z-20 border-b border-border-subtle bg-background-primary/90 px-4 py-3 backdrop-blur-xl md:px-6 lg:px-8">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.16em] text-text-muted">
-            Mês atual
-          </p>
-          <h1 className="text-xl font-semibold text-text-primary">{formatMonthLabel()}</h1>
-        </div>
+        <MonthSwitcher activeValue={activeMonthValue} options={monthOptions} />
 
         <div className="flex items-center gap-2">
           <Link

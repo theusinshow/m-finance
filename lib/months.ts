@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { months, users } from "@/db/schema";
 
@@ -69,6 +69,32 @@ export async function createCurrentMonthForUser(userId: string) {
     .returning();
 
   return month;
+}
+
+export async function getMonthByParts(userId: string, month: number, year: number) {
+  if (!db) {
+    return null;
+  }
+
+  const [row] = await db
+    .select()
+    .from(months)
+    .where(and(eq(months.userId, userId), eq(months.month, month), eq(months.year, year)))
+    .limit(1);
+
+  return row ?? null;
+}
+
+export async function getMonthsForUser(userId: string) {
+  if (!db) {
+    return [];
+  }
+
+  return db
+    .select()
+    .from(months)
+    .where(eq(months.userId, userId))
+    .orderBy(desc(months.year), desc(months.month));
 }
 
 export async function getNextMonthForUser(userId: string) {

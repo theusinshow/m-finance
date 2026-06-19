@@ -6,7 +6,8 @@ import { incomes } from "@/db/schema";
 import { requireUser } from "@/lib/auth/guard";
 import { db } from "@/db/client";
 import { incomeSchema } from "@/lib/validators/income";
-import { getAppUserBySupabaseId, getCurrentMonthForUser } from "@/lib/months";
+import { getAppUserBySupabaseId } from "@/lib/months";
+import { getActiveMonthForUser } from "@/lib/active-month";
 import { parseCurrencyToCents } from "@/lib/money";
 import {
   errorState,
@@ -23,7 +24,7 @@ export async function createIncome(_prev: FormState, formData: FormData): Promis
     return errorState("Banco ou usuário interno não configurado.");
   }
 
-  const currentMonth = await getCurrentMonthForUser(appUser.id);
+  const currentMonth = await getActiveMonthForUser(appUser.id);
 
   if (!currentMonth) {
     return errorState("Crie o mês atual antes de cadastrar receita.");

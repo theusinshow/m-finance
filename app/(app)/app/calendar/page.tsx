@@ -12,7 +12,8 @@ import { requireUser } from "@/lib/auth/guard";
 import { getBillsByMonth } from "@/lib/bills";
 import { getInvoicesByMonth } from "@/lib/cards";
 import { formatCurrency } from "@/lib/formatters/currency";
-import { getAppUserBySupabaseId, getCurrentMonthForUser } from "@/lib/months";
+import { getAppUserBySupabaseId } from "@/lib/months";
+import { getActiveMonthForUser, isViewingCurrentMonth } from "@/lib/active-month";
 import { cn } from "@/lib/utils";
 
 function getDaysInMonth(month: number, year: number) {
@@ -31,7 +32,8 @@ function getDayFromDate(date: string) {
 export default async function CalendarPage() {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
-  const currentMonth = appUser ? await getCurrentMonthForUser(appUser.id) : null;
+  const currentMonth = appUser ? await getActiveMonthForUser(appUser.id) : null;
+  const viewingCurrent = await isViewingCurrentMonth();
   const bills = currentMonth ? await getBillsByMonth(currentMonth.id) : [];
   const invoices = currentMonth ? await getInvoicesByMonth(currentMonth.id) : [];
   const daysInMonth = currentMonth ? getDaysInMonth(currentMonth.month, currentMonth.year) : 0;
@@ -66,7 +68,7 @@ export default async function CalendarPage() {
     <div className="space-y-6">
       <PageHeading eyebrow="Calendário financeiro" title="Vencimentos do mês" />
 
-      {!currentMonth ? <CreateCurrentMonthCard /> : null}
+      {!currentMonth && viewingCurrent ? <CreateCurrentMonthCard /> : null}
 
       {currentMonth ? (
         <section className="grid gap-4 xl:grid-cols-[1fr_380px]">

@@ -19,7 +19,8 @@ import { getDashboardSummary } from "@/lib/calculations/dashboard";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatMonthLabel } from "@/lib/formatters/date";
 import { requireUser } from "@/lib/auth/guard";
-import { getAppUserBySupabaseId, getCurrentMonthForUser } from "@/lib/months";
+import { getAppUserBySupabaseId } from "@/lib/months";
+import { getActiveMonthForUser, isViewingCurrentMonth } from "@/lib/active-month";
 import { getIncomesByMonth } from "@/lib/incomes";
 import { getBillCategories, getBillsByMonth, getRecurringBillsByMonth } from "@/lib/bills";
 import { getInvoicesByMonth } from "@/lib/cards";
@@ -29,7 +30,8 @@ import { getSettingsForUser } from "@/lib/settings";
 export default async function DashboardPage() {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
-  const currentMonth = appUser ? await getCurrentMonthForUser(appUser.id) : null;
+  const currentMonth = appUser ? await getActiveMonthForUser(appUser.id) : null;
+  const viewingCurrent = await isViewingCurrentMonth();
   const nextMonth = appUser ? await getNextMonthForUser(appUser.id) : null;
   const realIncomes = currentMonth ? await getIncomesByMonth(currentMonth.id) : [];
   const realBills = currentMonth ? await getBillsByMonth(currentMonth.id) : [];
@@ -63,7 +65,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {!currentMonth ? <CreateCurrentMonthCard /> : null}
+      {!currentMonth && viewingCurrent ? <CreateCurrentMonthCard /> : null}
 
       <section className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
         <DashboardCard accent className="min-h-64">
@@ -151,7 +153,7 @@ export default async function DashboardPage() {
 
       {currentMonth ? <IncomeFormCard incomes={realIncomes} /> : null}
 
-      {currentMonth && !nextMonth ? (
+      {currentMonth && viewingCurrent && !nextMonth ? (
         <MonthGenerationReviewCard categories={categories} recurringBills={recurringBills} />
       ) : null}
 

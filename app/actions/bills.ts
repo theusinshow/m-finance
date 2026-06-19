@@ -8,7 +8,8 @@ import { db } from "@/db/client";
 import { billSchema } from "@/lib/validators/bill";
 import { parseCurrencyToCents } from "@/lib/money";
 import { composeMonthDate, parseDueDay } from "@/lib/due-date";
-import { getAppUserBySupabaseId, getCurrentMonthForUser } from "@/lib/months";
+import { getAppUserBySupabaseId } from "@/lib/months";
+import { getActiveMonthForUser } from "@/lib/active-month";
 import {
   errorState,
   fieldErrorsFromZod,
@@ -24,7 +25,7 @@ export async function createBill(_prev: FormState, formData: FormData): Promise<
     return errorState("Banco ou usuário interno não configurado.");
   }
 
-  const currentMonth = await getCurrentMonthForUser(appUser.id);
+  const currentMonth = await getActiveMonthForUser(appUser.id);
 
   if (!currentMonth) {
     return errorState("Crie o mês atual antes de cadastrar conta.");

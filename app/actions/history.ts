@@ -9,7 +9,8 @@ import { getDashboardSummary } from "@/lib/calculations/dashboard";
 import { getBillsByMonth } from "@/lib/bills";
 import { getInvoicesByMonth } from "@/lib/cards";
 import { getIncomesByMonth } from "@/lib/incomes";
-import { getAppUserBySupabaseId, getCurrentMonthForUser } from "@/lib/months";
+import { getAppUserBySupabaseId } from "@/lib/months";
+import { getActiveMonthForUser } from "@/lib/active-month";
 
 export async function saveCurrentMonthSnapshot() {
   const user = await requireUser();
@@ -19,7 +20,8 @@ export async function saveCurrentMonthSnapshot() {
     throw new Error("Banco ou usuário interno não configurado.");
   }
 
-  const currentMonth = await getCurrentMonthForUser(appUser.id);
+  // Snapshot the month the user is viewing, not always the calendar month.
+  const currentMonth = await getActiveMonthForUser(appUser.id);
 
   if (!currentMonth) {
     throw new Error("Crie o mês atual antes de salvar histórico.");

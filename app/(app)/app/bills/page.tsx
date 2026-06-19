@@ -3,12 +3,14 @@ import { CreateCurrentMonthCard } from "@/components/dashboard/create-current-mo
 import { PageHeading } from "@/components/page-heading";
 import { requireUser } from "@/lib/auth/guard";
 import { getBillCategories, getBillsByMonth } from "@/lib/bills";
-import { getAppUserBySupabaseId, getCurrentMonthForUser } from "@/lib/months";
+import { getAppUserBySupabaseId } from "@/lib/months";
+import { getActiveMonthForUser, isViewingCurrentMonth } from "@/lib/active-month";
 
 export default async function BillsPage() {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
-  const currentMonth = appUser ? await getCurrentMonthForUser(appUser.id) : null;
+  const currentMonth = appUser ? await getActiveMonthForUser(appUser.id) : null;
+  const viewingCurrent = await isViewingCurrentMonth();
   const categories = appUser ? await getBillCategories(appUser.id) : [];
   const bills = currentMonth ? await getBillsByMonth(currentMonth.id) : [];
 
@@ -16,7 +18,7 @@ export default async function BillsPage() {
     <div className="space-y-6">
       <PageHeading eyebrow="Despesas" title="Despesas do mês" />
 
-      {!currentMonth ? <CreateCurrentMonthCard /> : null}
+      {!currentMonth && viewingCurrent ? <CreateCurrentMonthCard /> : null}
 
       {currentMonth ? <BillFormCard bills={bills} categories={categories} /> : null}
     </div>
