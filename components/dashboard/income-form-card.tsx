@@ -5,6 +5,7 @@ import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
 import { ValidatedForm, ValidatedInput, ValidatedSelect } from "@/components/ui/validated-form";
+import { InlineEmpty } from "@/components/ui/inline-empty";
 import { formatCurrency } from "@/lib/formatters/currency";
 
 type Income = {
@@ -100,9 +101,7 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
 
         <div className="space-y-3">
           {incomes.length === 0 ? (
-            <div className="rounded-lg border border-border-subtle bg-background-elevated p-4 text-sm text-text-muted">
-              Nenhuma receita cadastrada para este mês.
-            </div>
+            <InlineEmpty>Nenhuma receita cadastrada para este mês.</InlineEmpty>
           ) : (
             incomes.map((income) => (
               <div

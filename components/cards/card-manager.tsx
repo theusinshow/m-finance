@@ -4,6 +4,7 @@ import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
 import { ValidatedForm, ValidatedInput, ValidatedSelect } from "@/components/ui/validated-form";
+import { InlineEmpty } from "@/components/ui/inline-empty";
 
 type ManagedCard = {
   id: string;
@@ -78,9 +79,7 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
 
         <div className="space-y-3">
           {cards.length === 0 ? (
-            <div className="rounded-lg border border-border-subtle bg-background-elevated p-4 text-sm text-text-muted">
-              Nenhum cartão cadastrado ainda.
-            </div>
+            <InlineEmpty>Nenhum cartão cadastrado ainda.</InlineEmpty>
           ) : (
             cards.map((card) => (
               <div

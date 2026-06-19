@@ -2,6 +2,7 @@ import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { markBillAsPaid } from "@/app/actions/bills";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
+import { InlineEmpty } from "@/components/ui/inline-empty";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatShortDate } from "@/lib/formatters/date";
@@ -20,9 +21,7 @@ export function UpcomingBillsList({ bills }: { bills: Bill[] }) {
     <DashboardCard title="Próximos vencimentos">
       <div className="space-y-3">
         {bills.length === 0 ? (
-          <div className="rounded-lg border border-border-subtle bg-background-elevated p-4 text-sm text-text-muted">
-            Nenhuma despesa cadastrada para este mês.
-          </div>
+          <InlineEmpty>Nenhuma despesa cadastrada para este mês.</InlineEmpty>
         ) : (
           bills.map((bill) => (
             <div

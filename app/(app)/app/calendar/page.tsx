@@ -6,6 +6,7 @@ import { markInvoiceAsPaid } from "@/app/actions/invoices";
 import { PageHeading } from "@/components/page-heading";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
+import { InlineEmpty } from "@/components/ui/inline-empty";
 import { StatusBadge } from "@/components/status-badge";
 import { requireUser } from "@/lib/auth/guard";
 import { getBillsByMonth } from "@/lib/bills";
@@ -141,9 +142,7 @@ export default async function CalendarPage() {
           <DashboardCard title="Eventos do mês">
             <div className="space-y-3">
               {events.length === 0 ? (
-                <p className="rounded-lg border border-border-subtle bg-background-elevated p-4 text-sm text-text-muted">
-                  Nenhum vencimento cadastrado para este mês.
-                </p>
+                <InlineEmpty>Nenhum vencimento cadastrado para este mês.</InlineEmpty>
               ) : (
                 events.map((event) => (
                   <div

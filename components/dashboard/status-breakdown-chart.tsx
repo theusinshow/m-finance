@@ -1,6 +1,7 @@
 "use client";
 
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { InlineEmpty } from "@/components/ui/inline-empty";
 import { formatCurrency } from "@/lib/formatters/currency";
 
 type Slice = { name: string; value: number; color: string };
@@ -28,9 +29,7 @@ export function StatusBreakdownChart({
 
   if (total === 0) {
     return (
-      <div className="rounded-lg border border-border-subtle bg-background-elevated p-4 text-sm text-text-muted">
-        Sem despesas ou faturas neste mês para distribuir.
-      </div>
+      <InlineEmpty>Sem despesas ou faturas neste mês para distribuir.</InlineEmpty>
     );
   }
 

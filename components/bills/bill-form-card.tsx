@@ -6,6 +6,7 @@ import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
 import { ValidatedForm, ValidatedInput, ValidatedSelect } from "@/components/ui/validated-form";
+import { InlineEmpty } from "@/components/ui/inline-empty";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatShortDate } from "@/lib/formatters/date";
@@ -133,9 +134,7 @@ export function BillFormCard({
 
       <DashboardCard description="Despesas pendentes e vencidas deste mês." title="A pagar">
         {pending.length === 0 ? (
-          <div className="rounded-lg border border-border-subtle bg-background-elevated p-4 text-sm text-text-muted">
-            Tudo pago por aqui. Nenhuma despesa em aberto neste mês.
-          </div>
+          <InlineEmpty>Tudo pago por aqui. Nenhuma despesa em aberto neste mês.</InlineEmpty>
         ) : (
           <div className="space-y-3">
             {pending.map((bill) => (
@@ -150,9 +149,7 @@ export function BillFormCard({
         title="Pagas"
       >
         {paid.length === 0 ? (
-          <div className="rounded-lg border border-border-subtle bg-background-elevated p-4 text-sm text-text-muted">
-            Nenhuma despesa marcada como paga ainda.
-          </div>
+          <InlineEmpty>Nenhuma despesa marcada como paga ainda.</InlineEmpty>
         ) : (
           <div className="space-y-3">
             {paid.map((bill) => (

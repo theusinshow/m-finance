@@ -4,6 +4,7 @@ import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
 import { ValidatedForm, ValidatedInput } from "@/components/ui/validated-form";
+import { InlineEmpty } from "@/components/ui/inline-empty";
 import { PageHeading } from "@/components/page-heading";
 import { requireUser } from "@/lib/auth/guard";
 import { getManagedCreditCards } from "@/lib/cards";
@@ -94,9 +95,7 @@ export default async function SettingsPage() {
 
           <div className="space-y-2">
             {categories.length === 0 ? (
-              <div className="rounded-lg border border-border-subtle bg-background-elevated p-4 text-sm text-text-muted">
-                Nenhuma categoria cadastrada.
-              </div>
+              <InlineEmpty>Nenhuma categoria cadastrada.</InlineEmpty>
             ) : (
               categories.map((category) => (
                 <div

@@ -5,6 +5,7 @@ import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
 import { ValidatedForm, ValidatedInput } from "@/components/ui/validated-form";
+import { InlineEmpty } from "@/components/ui/inline-empty";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatShortDate } from "@/lib/formatters/date";
@@ -28,9 +29,7 @@ export function InvoiceSummaryCard({ invoices }: { invoices: Invoice[] }) {
     <DashboardCard title="Faturas">
       <div className="space-y-3">
         {invoices.length === 0 ? (
-          <div className="rounded-lg border border-border-subtle bg-background-elevated p-4 text-sm text-text-muted">
-            Nenhuma fatura cadastrada para este mês.
-          </div>
+          <InlineEmpty>Nenhuma fatura cadastrada para este mês.</InlineEmpty>
         ) : invoices.map((invoice) => (
           <div className="rounded-lg border border-border-subtle bg-background-elevated p-4" key={invoice.id}>
             <div className="flex items-start justify-between gap-4">
