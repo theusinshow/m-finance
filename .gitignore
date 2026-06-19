@@ -6,3 +6,5 @@ build
 .env*.local
 drizzle
 *.log
+*.tsbuildinfo
+next-env.d.ts
