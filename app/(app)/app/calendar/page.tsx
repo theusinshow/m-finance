@@ -69,10 +69,14 @@ export default async function CalendarPage() {
       {currentMonth ? (
         <section className="grid gap-4 xl:grid-cols-[1fr_380px]">
           <DashboardCard>
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
               {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((day) => (
-                <div className="pb-2 text-center text-xs font-semibold text-text-muted" key={day}>
-                  {day}
+                <div
+                  className="pb-2 text-center text-[10px] font-semibold uppercase tracking-tight text-text-muted sm:text-xs"
+                  key={day}
+                >
+                  <span className="sm:hidden">{day.slice(0, 1)}</span>
+                  <span className="hidden sm:inline">{day}</span>
                 </div>
               ))}
               {Array.from({ length: firstOffset }, (_, index) => (
@@ -88,7 +92,7 @@ export default async function CalendarPage() {
                 return (
                   <div
                     className={cn(
-                      "min-h-28 rounded-md border border-border-subtle bg-background-elevated p-3 transition duration-200",
+                      "min-h-14 rounded-md border border-border-subtle bg-background-elevated p-1.5 transition duration-200 sm:min-h-28 sm:p-3",
                       isToday && "border-accent-border bg-accent-soft",
                     )}
                     key={day}
@@ -108,7 +112,7 @@ export default async function CalendarPage() {
                         </span>
                       ) : null}
                     </div>
-                    <div className="mt-3 space-y-1.5">
+                    <div className="mt-3 hidden space-y-1.5 sm:block">
                       {dayEvents.slice(0, 2).map((event) => (
                         <div
                           className="truncate rounded-sm border border-border-subtle bg-background-card px-2 py-1 text-xs text-text-secondary"
@@ -123,9 +127,9 @@ export default async function CalendarPage() {
                       ) : null}
                     </div>
                     {hasOverdue ? (
-                      <span className="mt-3 block h-1 rounded-full bg-accent" />
+                      <span className="mt-1.5 block h-1 rounded-full bg-accent sm:mt-3" />
                     ) : hasPending ? (
-                      <span className="mt-3 block h-1 rounded-full bg-status-fair" />
+                      <span className="mt-1.5 block h-1 rounded-full bg-status-fair sm:mt-3" />
                     ) : null}
                   </div>
                 );
