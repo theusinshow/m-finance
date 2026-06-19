@@ -88,7 +88,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
             <form action={signInWithGoogle} className="mt-6">
               <button
-                className="clip-notch sheen group focus-ring flex h-12 w-full items-center justify-center gap-2 bg-accent px-4 text-sm font-semibold tracking-tight text-text-inverse transition duration-200 hover:bg-accent-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                className="clip-notch sheen group focus-ring flex h-12 w-full items-center justify-center gap-2 bg-accent-strong px-4 text-sm font-semibold tracking-tight text-text-primary transition duration-200 hover:bg-accent-strong-hover active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={!configured}
                 type="submit"
               >

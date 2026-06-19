@@ -16,6 +16,10 @@
   --color-accent-hover: #ff4b54;
   --color-accent-soft: rgba(251, 54, 64, 0.12);
   --color-accent-border: rgba(251, 54, 64, 0.35);
+  /* Deeper red reserved for FILLED CTAs so light text reads at >=4.5:1.
+     The vivid --color-accent stays the brand mark for borders, badges, glows. */
+  --color-accent-strong: #C9202D;
+  --color-accent-strong-hover: #B31C28;
   --color-status-positive: #54D18A;
   --color-status-fair: #D8B45A;
   --color-status-tight: #D98245;
