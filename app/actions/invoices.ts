@@ -9,27 +9,42 @@ import { getAppUserBySupabaseId, getCurrentMonthForUser } from "@/lib/months";
 import { parseCurrencyToCents } from "@/lib/money";
 import { composeMonthDate, parseDueDay } from "@/lib/due-date";
 import { invoiceSchema } from "@/lib/validators/invoice";
+import {
+  errorState,
+  fieldErrorsFromZod,
+  successState,
+  type FormState,
+} from "@/lib/form-state";
 
-export async function createInvoice(formData: FormData) {
+export async function createInvoice(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
 
   if (!db || !appUser) {
-    throw new Error("Banco ou usuário interno não configurado.");
+    return errorState("Banco ou usuário interno não configurado.");
   }
 
   const currentMonth = await getCurrentMonthForUser(appUser.id);
 
   if (!currentMonth) {
-    throw new Error("Crie o mês atual antes de cadastrar fatura.");
+    return errorState("Crie o mês atual antes de cadastrar fatura.");
   }
 
-  const payload = invoiceSchema.parse({
+  const parsed = invoiceSchema.safeParse({
     cardId: formData.get("cardId"),
     amountCents: parseCurrencyToCents(formData.get("amount")),
     dueDay: parseDueDay(formData.get("dueDay")),
     notes: formData.get("notes") || undefined,
   });
+
+  if (!parsed.success) {
+    return errorState(
+      "Revise os campos destacados.",
+      fieldErrorsFromZod(parsed.error, { amountCents: "amount", cardId: "cardId" }),
+    );
+  }
+
+  const payload = parsed.data;
 
   // The due date defaults to the card's own due day, so adding a monthly
   // invoice is just "pick card + value".
@@ -40,7 +55,7 @@ export async function createInvoice(formData: FormData) {
     .limit(1);
 
   if (!card) {
-    throw new Error("Cartão não encontrado.");
+    return errorState("Cartão não encontrado.");
   }
 
   const dueDate = composeMonthDate(
@@ -74,6 +89,7 @@ export async function createInvoice(formData: FormData) {
   revalidatePath("/app/dashboard");
   revalidatePath("/app/cards");
   revalidatePath("/app/calendar");
+  return successState("Fatura adicionada.");
 }
 
 export async function markInvoiceAsPaid(formData: FormData) {
@@ -122,15 +138,21 @@ export async function markInvoiceAsPending(formData: FormData) {
   revalidatePath("/app/calendar");
 }
 
-export async function updateInvoice(formData: FormData) {
+export async function updateInvoice(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
   const invoiceId = String(formData.get("invoiceId") ?? "");
   const amountCents = parseCurrencyToCents(formData.get("amount"));
   const dueDay = parseDueDay(formData.get("dueDay"));
 
-  if (!db || !appUser || !invoiceId || amountCents <= 0) {
-    throw new Error("Não foi possível editar a fatura.");
+  if (!db || !appUser || !invoiceId) {
+    return errorState("Não foi possível editar a fatura.");
+  }
+
+  if (amountCents <= 0) {
+    return errorState("Revise os campos destacados.", {
+      amount: "Informe um valor maior que zero.",
+    });
   }
 
   const [invoiceMonth] = await db
@@ -154,6 +176,7 @@ export async function updateInvoice(formData: FormData) {
   revalidatePath("/app/dashboard");
   revalidatePath("/app/cards");
   revalidatePath("/app/calendar");
+  return successState("Fatura atualizada.");
 }
 
 export async function deleteInvoice(formData: FormData) {

@@ -7,6 +7,12 @@ import { db } from "@/db/client";
 import { requireUser } from "@/lib/auth/guard";
 import { getAppUserBySupabaseId } from "@/lib/months";
 import { cardSchema } from "@/lib/validators/card";
+import {
+  errorState,
+  fieldErrorsFromZod,
+  successState,
+  type FormState,
+} from "@/lib/form-state";
 
 function revalidateCardSurfaces() {
   revalidatePath("/app/cards");
@@ -14,19 +20,25 @@ function revalidateCardSurfaces() {
   revalidatePath("/app/dashboard");
 }
 
-export async function createCard(formData: FormData) {
+export async function createCard(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
 
   if (!db || !appUser) {
-    throw new Error("Banco ou usuário interno não configurado.");
+    return errorState("Banco ou usuário interno não configurado.");
   }
 
-  const payload = cardSchema.parse({
+  const parsed = cardSchema.safeParse({
     name: formData.get("name"),
     cardType: formData.get("cardType"),
     dueDay: formData.get("dueDay"),
   });
+
+  if (!parsed.success) {
+    return errorState("Revise os campos destacados.", fieldErrorsFromZod(parsed.error));
+  }
+
+  const payload = parsed.data;
 
   await db.insert(creditCards).values({
     userId: appUser.id,
@@ -36,22 +48,29 @@ export async function createCard(formData: FormData) {
   });
 
   revalidateCardSurfaces();
+  return successState("Cartão adicionado.");
 }
 
-export async function updateCard(formData: FormData) {
+export async function updateCard(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
   const cardId = String(formData.get("cardId") ?? "");
 
   if (!db || !appUser || !cardId) {
-    throw new Error("Não foi possível editar o cartão.");
+    return errorState("Não foi possível editar o cartão.");
   }
 
-  const payload = cardSchema.parse({
+  const parsed = cardSchema.safeParse({
     name: formData.get("name"),
     cardType: formData.get("cardType"),
     dueDay: formData.get("dueDay"),
   });
+
+  if (!parsed.success) {
+    return errorState("Revise os campos destacados.", fieldErrorsFromZod(parsed.error));
+  }
+
+  const payload = parsed.data;
 
   await db
     .update(creditCards)
@@ -64,6 +83,7 @@ export async function updateCard(formData: FormData) {
     .where(and(eq(creditCards.id, cardId), eq(creditCards.userId, appUser.id)));
 
   revalidateCardSurfaces();
+  return successState("Cartão atualizado.");
 }
 
 export async function setCardActive(formData: FormData) {

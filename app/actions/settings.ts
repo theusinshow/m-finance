@@ -7,6 +7,12 @@ import { db } from "@/db/client";
 import { requireUser } from "@/lib/auth/guard";
 import { getAppUserBySupabaseId } from "@/lib/months";
 import { categorySchema, settingsSchema } from "@/lib/validators/settings";
+import {
+  errorState,
+  fieldErrorsFromZod,
+  successState,
+  type FormState,
+} from "@/lib/form-state";
 
 function slugify(value: string) {
   return value
@@ -17,17 +23,23 @@ function slugify(value: string) {
     .replace(/(^-|-$)/g, "");
 }
 
-export async function updateSettings(formData: FormData) {
+export async function updateSettings(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
 
   if (!db || !appUser) {
-    throw new Error("Banco ou usuário interno não configurado.");
+    return errorState("Banco ou usuário interno não configurado.");
   }
 
-  const payload = settingsSchema.parse({
+  const parsed = settingsSchema.safeParse({
     alertDaysBefore: formData.get("alertDaysBefore"),
   });
+
+  if (!parsed.success) {
+    return errorState("Revise os campos destacados.", fieldErrorsFromZod(parsed.error));
+  }
+
+  const payload = parsed.data;
 
   await db
     .insert(settings)
@@ -39,21 +51,30 @@ export async function updateSettings(formData: FormData) {
 
   revalidatePath("/app/settings");
   revalidatePath("/app/dashboard");
+  return successState("Preferências salvas.");
 }
 
-export async function createCategory(formData: FormData) {
+export async function createCategory(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
 
   if (!db || !appUser) {
-    throw new Error("Banco ou usuário interno não configurado.");
+    return errorState("Banco ou usuário interno não configurado.");
   }
 
-  const payload = categorySchema.parse({ name: formData.get("name") });
+  const parsed = categorySchema.safeParse({ name: formData.get("name") });
+
+  if (!parsed.success) {
+    return errorState("Revise os campos destacados.", fieldErrorsFromZod(parsed.error));
+  }
+
+  const payload = parsed.data;
   const slug = slugify(payload.name);
 
   if (!slug) {
-    throw new Error("Informe um nome de categoria válido.");
+    return errorState("Revise os campos destacados.", {
+      name: "Informe um nome de categoria válido.",
+    });
   }
 
   await db
@@ -66,6 +87,7 @@ export async function createCategory(formData: FormData) {
 
   revalidatePath("/app/settings");
   revalidatePath("/app/bills");
+  return successState("Categoria adicionada.");
 }
 
 export async function setCategoryArchived(formData: FormData) {

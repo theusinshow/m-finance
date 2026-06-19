@@ -9,23 +9,29 @@ import { billSchema } from "@/lib/validators/bill";
 import { parseCurrencyToCents } from "@/lib/money";
 import { composeMonthDate, parseDueDay } from "@/lib/due-date";
 import { getAppUserBySupabaseId, getCurrentMonthForUser } from "@/lib/months";
+import {
+  errorState,
+  fieldErrorsFromZod,
+  successState,
+  type FormState,
+} from "@/lib/form-state";
 
-export async function createBill(formData: FormData) {
+export async function createBill(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
 
   if (!db || !appUser) {
-    throw new Error("Banco ou usuário interno não configurado.");
+    return errorState("Banco ou usuário interno não configurado.");
   }
 
   const currentMonth = await getCurrentMonthForUser(appUser.id);
 
   if (!currentMonth) {
-    throw new Error("Crie o mês atual antes de cadastrar conta.");
+    return errorState("Crie o mês atual antes de cadastrar conta.");
   }
 
   const categoryId = String(formData.get("categoryId") ?? "");
-  const payload = billSchema.parse({
+  const parsed = billSchema.safeParse({
     name: formData.get("name"),
     amountCents: parseCurrencyToCents(formData.get("amount")),
     categoryId: categoryId || undefined,
@@ -33,6 +39,15 @@ export async function createBill(formData: FormData) {
     isRecurring: formData.get("isRecurring") === "on",
     notes: formData.get("notes") || undefined,
   });
+
+  if (!parsed.success) {
+    return errorState(
+      "Revise os campos destacados.",
+      fieldErrorsFromZod(parsed.error, { amountCents: "amount" }),
+    );
+  }
+
+  const payload = parsed.data;
 
   // No day informed defaults to the end of the month, so the bill never looks
   // overdue just because the user skipped the date.
@@ -53,6 +68,7 @@ export async function createBill(formData: FormData) {
   revalidatePath("/app/dashboard");
   revalidatePath("/app/bills");
   revalidatePath("/app/calendar");
+  return successState("Despesa adicionada.");
 }
 
 export async function markBillAsPaid(formData: FormData) {
@@ -101,17 +117,17 @@ export async function markBillAsPending(formData: FormData) {
   revalidatePath("/app/calendar");
 }
 
-export async function updateBill(formData: FormData) {
+export async function updateBill(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
   const billId = String(formData.get("billId") ?? "");
 
   if (!db || !appUser || !billId) {
-    throw new Error("Não foi possível editar a conta.");
+    return errorState("Não foi possível editar a conta.");
   }
 
   const categoryId = String(formData.get("categoryId") ?? "");
-  const payload = billSchema.parse({
+  const parsed = billSchema.safeParse({
     name: formData.get("name"),
     amountCents: parseCurrencyToCents(formData.get("amount")),
     categoryId: categoryId || undefined,
@@ -119,6 +135,15 @@ export async function updateBill(formData: FormData) {
     isRecurring: formData.get("isRecurring") === "on",
     notes: formData.get("notes") || undefined,
   });
+
+  if (!parsed.success) {
+    return errorState(
+      "Revise os campos destacados.",
+      fieldErrorsFromZod(parsed.error, { amountCents: "amount" }),
+    );
+  }
+
+  const payload = parsed.data;
 
   // Recompose the due date only when a day is provided; otherwise keep the
   // existing one. The day lives inside the bill's own month.
@@ -147,6 +172,7 @@ export async function updateBill(formData: FormData) {
   revalidatePath("/app/dashboard");
   revalidatePath("/app/bills");
   revalidatePath("/app/calendar");
+  return successState("Despesa atualizada.");
 }
 
 export async function deleteBill(formData: FormData) {

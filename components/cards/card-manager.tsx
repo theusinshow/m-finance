@@ -3,6 +3,7 @@ import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
+import { ValidatedForm, ValidatedInput, ValidatedSelect } from "@/components/ui/validated-form";
 
 type ManagedCard = {
   id: string;
@@ -24,12 +25,12 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
       title="Gerenciar cartões"
     >
       <div className="grid gap-5 xl:grid-cols-[0.85fr_1fr]">
-        <ToastForm action={createCard} successMessage="Cartão adicionado." className="space-y-4">
+        <ValidatedForm action={createCard} successMessage="Cartão adicionado." resetOnSuccess className="space-y-4">
           <div>
             <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="card-name">
               Nome
             </label>
-            <input
+            <ValidatedInput
               className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary placeholder:text-text-muted"
               id="card-name"
               name="name"
@@ -43,7 +44,7 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
               <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="card-type">
                 Tipo
               </label>
-              <select
+              <ValidatedSelect
                 className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary"
                 defaultValue="personal"
                 id="card-type"
@@ -52,13 +53,13 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
               >
                 <option value="personal">Pessoal</option>
                 <option value="business">PJ</option>
-              </select>
+              </ValidatedSelect>
             </div>
             <div>
               <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="card-due-day">
                 Dia de vencimento
               </label>
-              <input
+              <ValidatedInput
                 className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary placeholder:text-text-muted"
                 id="card-due-day"
                 inputMode="numeric"
@@ -73,7 +74,7 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
           </div>
 
           <FormSubmitButton pendingLabel="Adicionando...">Adicionar cartão</FormSubmitButton>
-        </ToastForm>
+        </ValidatedForm>
 
         <div className="space-y-3">
           {cards.length === 0 ? (
@@ -121,24 +122,24 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
                 </div>
 
                 <EditDisclosure className="mt-4">
-                  <ToastForm action={updateCard} successMessage="Cartão atualizado." className="grid gap-3">
+                  <ValidatedForm action={updateCard} successMessage="Cartão atualizado." className="grid gap-3">
                     <input name="cardId" type="hidden" value={card.id} />
-                    <input
+                    <ValidatedInput
                       className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
                       defaultValue={card.name}
                       name="name"
                       required
                     />
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <select
+                      <ValidatedSelect
                         className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
                         defaultValue={card.cardType}
                         name="cardType"
                       >
                         <option value="personal">Pessoal</option>
                         <option value="business">PJ</option>
-                      </select>
-                      <input
+                      </ValidatedSelect>
+                      <ValidatedInput
                         className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
                         defaultValue={card.dueDay}
                         inputMode="numeric"
@@ -150,7 +151,7 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
                       />
                     </div>
                     <FormSubmitButton pendingLabel="Salvando...">Salvar cartão</FormSubmitButton>
-                  </ToastForm>
+                  </ValidatedForm>
                 </EditDisclosure>
               </div>
             ))

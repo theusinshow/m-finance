@@ -4,6 +4,7 @@ import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
+import { ValidatedForm, ValidatedInput } from "@/components/ui/validated-form";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatShortDate } from "@/lib/formatters/date";
@@ -67,17 +68,17 @@ export function InvoiceSummaryCard({ invoices }: { invoices: Invoice[] }) {
               )}
             </div>
             <EditDisclosure className="mt-4">
-              <ToastForm action={updateInvoice} successMessage="Fatura atualizada." className="grid gap-3">
+              <ValidatedForm action={updateInvoice} successMessage="Fatura atualizada." className="grid gap-3">
                 <input name="invoiceId" type="hidden" value={invoice.id} />
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <input
+                  <ValidatedInput
                     className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
                     defaultValue={formatCentsInput(invoice.amountCents)}
                     inputMode="decimal"
                     name="amount"
                     required
                   />
-                  <input
+                  <ValidatedInput
                     aria-label="Dia do vencimento"
                     className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
                     defaultValue={dayFromIsoDate(invoice.dueDate)}
@@ -92,7 +93,7 @@ export function InvoiceSummaryCard({ invoices }: { invoices: Invoice[] }) {
                 <FormSubmitButton pendingLabel="Salvando...">
                   Salvar fatura
                 </FormSubmitButton>
-              </ToastForm>
+              </ValidatedForm>
               <ToastForm action={deleteInvoice} successMessage="Fatura excluída." className="mt-2">
                 <input name="invoiceId" type="hidden" value={invoice.id} />
                 <ConfirmDeleteButton confirmMessage="Excluir esta fatura? Essa ação não pode ser desfeita.">

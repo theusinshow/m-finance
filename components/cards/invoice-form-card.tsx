@@ -1,7 +1,7 @@
 import { createInvoice } from "@/app/actions/invoices";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { FormSubmitButton } from "@/components/form-submit-button";
-import { ToastForm } from "@/components/toast-form";
+import { ValidatedForm, ValidatedInput, ValidatedSelect } from "@/components/ui/validated-form";
 
 type Card = {
   id: string;
@@ -15,16 +15,17 @@ export function InvoiceFormCard({ cards }: { cards: Card[] }) {
       description="Lance só o total do mês. O vencimento usa o dia do próprio cartão."
       title="Adicionar fatura"
     >
-      <ToastForm
+      <ValidatedForm
         action={createInvoice}
         successMessage="Fatura adicionada."
+        resetOnSuccess
         className="grid gap-4 md:grid-cols-[1fr_200px_auto] md:items-end"
       >
         <div>
           <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="invoice-card">
             Cartão
           </label>
-          <select
+          <ValidatedSelect
             className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary"
             id="invoice-card"
             name="cardId"
@@ -36,13 +37,13 @@ export function InvoiceFormCard({ cards }: { cards: Card[] }) {
                 {card.cardType === "business" ? " PJ" : ""}
               </option>
             ))}
-          </select>
+          </ValidatedSelect>
         </div>
         <div>
           <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="invoice-amount">
             Valor da fatura
           </label>
-          <input
+          <ValidatedInput
             className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary placeholder:text-text-muted"
             id="invoice-amount"
             inputMode="decimal"
@@ -52,7 +53,7 @@ export function InvoiceFormCard({ cards }: { cards: Card[] }) {
           />
         </div>
         <FormSubmitButton pendingLabel="Salvando...">Salvar fatura</FormSubmitButton>
-      </ToastForm>
+      </ValidatedForm>
     </DashboardCard>
   );
 }

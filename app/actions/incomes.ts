@@ -8,28 +8,43 @@ import { db } from "@/db/client";
 import { incomeSchema } from "@/lib/validators/income";
 import { getAppUserBySupabaseId, getCurrentMonthForUser } from "@/lib/months";
 import { parseCurrencyToCents } from "@/lib/money";
+import {
+  errorState,
+  fieldErrorsFromZod,
+  successState,
+  type FormState,
+} from "@/lib/form-state";
 
-export async function createIncome(formData: FormData) {
+export async function createIncome(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
 
   if (!db || !appUser) {
-    throw new Error("Banco ou usuário interno não configurado.");
+    return errorState("Banco ou usuário interno não configurado.");
   }
 
   const currentMonth = await getCurrentMonthForUser(appUser.id);
 
   if (!currentMonth) {
-    throw new Error("Crie o mês atual antes de cadastrar receita.");
+    return errorState("Crie o mês atual antes de cadastrar receita.");
   }
 
-  const payload = incomeSchema.parse({
+  const parsed = incomeSchema.safeParse({
     name: formData.get("name"),
     amountCents: parseCurrencyToCents(formData.get("amount")),
     incomeType: formData.get("incomeType"),
     expectedDate: String(formData.get("expectedDate") ?? "") || undefined,
     received: formData.get("received") === "on",
   });
+
+  if (!parsed.success) {
+    return errorState(
+      "Revise os campos destacados.",
+      fieldErrorsFromZod(parsed.error, { amountCents: "amount" }),
+    );
+  }
+
+  const payload = parsed.data;
 
   await db.insert(incomes).values({
     userId: appUser.id,
@@ -42,24 +57,34 @@ export async function createIncome(formData: FormData) {
   });
 
   revalidatePath("/app/dashboard");
+  return successState("Receita adicionada.");
 }
 
-export async function updateIncome(formData: FormData) {
+export async function updateIncome(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
   const incomeId = String(formData.get("incomeId") ?? "");
 
   if (!db || !appUser || !incomeId) {
-    throw new Error("Não foi possível editar a receita.");
+    return errorState("Não foi possível editar a receita.");
   }
 
-  const payload = incomeSchema.parse({
+  const parsed = incomeSchema.safeParse({
     name: formData.get("name"),
     amountCents: parseCurrencyToCents(formData.get("amount")),
     incomeType: formData.get("incomeType"),
     expectedDate: String(formData.get("expectedDate") ?? "") || undefined,
     received: formData.get("received") === "on",
   });
+
+  if (!parsed.success) {
+    return errorState(
+      "Revise os campos destacados.",
+      fieldErrorsFromZod(parsed.error, { amountCents: "amount" }),
+    );
+  }
+
+  const payload = parsed.data;
 
   await db
     .update(incomes)
@@ -74,6 +99,7 @@ export async function updateIncome(formData: FormData) {
     .where(and(eq(incomes.id, incomeId), eq(incomes.userId, appUser.id)));
 
   revalidatePath("/app/dashboard");
+  return successState("Receita atualizada.");
 }
 
 export async function deleteIncome(formData: FormData) {

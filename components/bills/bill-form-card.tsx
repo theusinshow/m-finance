@@ -5,6 +5,7 @@ import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
+import { ValidatedForm, ValidatedInput, ValidatedSelect } from "@/components/ui/validated-form";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatShortDate } from "@/lib/formatters/date";
@@ -65,19 +66,19 @@ export function BillFormCard({
             </div>
           }
         >
-          <ToastForm action={createBill} successMessage="Despesa adicionada." className="grid gap-4 lg:grid-cols-2">
+          <ValidatedForm action={createBill} successMessage="Despesa adicionada." resetOnSuccess className="grid gap-4 lg:grid-cols-2">
             <div className="lg:col-span-2">
               <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="bill-name">
                 Nome da despesa
               </label>
-              <input className={inputClass} id="bill-name" name="name" placeholder="Internet" required />
+              <ValidatedInput className={inputClass} id="bill-name" name="name" placeholder="Internet" required />
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="bill-amount">
                 Valor
               </label>
-              <input
+              <ValidatedInput
                 className={inputClass}
                 id="bill-amount"
                 inputMode="decimal"
@@ -90,7 +91,7 @@ export function BillFormCard({
               <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="bill-due-day">
                 Dia do vencimento
               </label>
-              <input
+              <ValidatedInput
                 className={inputClass}
                 id="bill-due-day"
                 inputMode="numeric"
@@ -106,14 +107,14 @@ export function BillFormCard({
               <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="bill-category">
                 Categoria
               </label>
-              <select className={inputClass} id="bill-category" name="categoryId">
+              <ValidatedSelect className={inputClass} id="bill-category" name="categoryId">
                 <option value="">Sem categoria</option>
                 {categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
                 ))}
-              </select>
+              </ValidatedSelect>
             </div>
             <label className="flex items-center gap-2 self-end pb-2 text-sm text-text-secondary">
               <input className="h-4 w-4 accent-accent" name="isRecurring" type="checkbox" />
@@ -126,7 +127,7 @@ export function BillFormCard({
             <div className="lg:col-span-2">
               <FormSubmitButton pendingLabel="Adicionando...">Adicionar despesa</FormSubmitButton>
             </div>
-          </ToastForm>
+          </ValidatedForm>
         </AddExpensePanel>
       </DashboardCard>
 
@@ -207,18 +208,18 @@ function BillRow({
       </div>
 
       <EditDisclosure className="mt-3">
-        <ToastForm action={updateBill} successMessage="Despesa atualizada." className="grid gap-3">
+        <ValidatedForm action={updateBill} successMessage="Despesa atualizada." className="grid gap-3">
           <input name="billId" type="hidden" value={bill.id} />
-          <input className={editInputClass} defaultValue={bill.name} name="name" required />
+          <ValidatedInput className={editInputClass} defaultValue={bill.name} name="name" required />
           <div className="grid gap-3 sm:grid-cols-2">
-            <input
+            <ValidatedInput
               className={editInputClass}
               defaultValue={formatCentsInput(bill.amountCents)}
               inputMode="decimal"
               name="amount"
               required
             />
-            <input
+            <ValidatedInput
               aria-label="Dia do vencimento"
               className={editInputClass}
               defaultValue={dayFromIsoDate(bill.dueDate)}
@@ -230,20 +231,20 @@ function BillRow({
               type="number"
             />
           </div>
-          <select className={editInputClass} defaultValue={bill.categoryId ?? ""} name="categoryId">
+          <ValidatedSelect className={editInputClass} defaultValue={bill.categoryId ?? ""} name="categoryId">
             <option value="">Sem categoria</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
             ))}
-          </select>
+          </ValidatedSelect>
           <label className="flex items-center gap-2 text-sm text-text-secondary">
             <input className="h-4 w-4 accent-accent" defaultChecked={bill.isRecurring} name="isRecurring" type="checkbox" />
             Despesa recorrente
           </label>
           <FormSubmitButton pendingLabel="Salvando...">Salvar despesa</FormSubmitButton>
-        </ToastForm>
+        </ValidatedForm>
         <ToastForm action={deleteBill} successMessage="Despesa excluída." className="mt-2">
           <input name="billId" type="hidden" value={bill.id} />
           <ConfirmDeleteButton confirmMessage="Excluir esta despesa?">Excluir despesa</ConfirmDeleteButton>

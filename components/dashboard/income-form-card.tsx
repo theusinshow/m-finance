@@ -4,6 +4,7 @@ import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
+import { ValidatedForm, ValidatedInput, ValidatedSelect } from "@/components/ui/validated-form";
 import { formatCurrency } from "@/lib/formatters/currency";
 
 type Income = {
@@ -32,12 +33,12 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
       title="Receitas do mês"
     >
       <div className="grid gap-5 xl:grid-cols-[0.85fr_1fr]">
-        <ToastForm action={createIncome} successMessage="Receita adicionada." className="space-y-4">
+        <ValidatedForm action={createIncome} successMessage="Receita adicionada." resetOnSuccess className="space-y-4">
           <div>
             <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="income-name">
               Nome
             </label>
-            <input
+            <ValidatedInput
               className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary placeholder:text-text-muted"
               id="income-name"
               name="name"
@@ -51,7 +52,7 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
               <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="income-amount">
                 Valor
               </label>
-              <input
+              <ValidatedInput
                 className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary placeholder:text-text-muted"
                 id="income-amount"
                 inputMode="decimal"
@@ -64,7 +65,7 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
               <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="income-type">
                 Tipo
               </label>
-              <select
+              <ValidatedSelect
                 className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary"
                 id="income-type"
                 name="incomeType"
@@ -73,7 +74,7 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
                 <option value="main">Principal</option>
                 <option value="extra">Extra</option>
                 <option value="freelance">Freelance</option>
-              </select>
+              </ValidatedSelect>
             </div>
           </div>
 
@@ -95,7 +96,7 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
           </label>
 
           <FormSubmitButton pendingLabel="Adicionando...">Adicionar receita</FormSubmitButton>
-        </ToastForm>
+        </ValidatedForm>
 
         <div className="space-y-3">
           {incomes.length === 0 ? (
@@ -120,23 +121,23 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
                   </p>
                 </div>
                 <EditDisclosure className="mt-4">
-                  <ToastForm action={updateIncome} successMessage="Receita atualizada." className="grid gap-3">
+                  <ValidatedForm action={updateIncome} successMessage="Receita atualizada." className="grid gap-3">
                     <input name="incomeId" type="hidden" value={income.id} />
-                    <input
+                    <ValidatedInput
                       className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
                       defaultValue={income.name}
                       name="name"
                       required
                     />
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <input
+                      <ValidatedInput
                         className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
                         defaultValue={formatCentsInput(income.amountCents)}
                         inputMode="decimal"
                         name="amount"
                         required
                       />
-                      <select
+                      <ValidatedSelect
                         className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
                         defaultValue={income.incomeType}
                         name="incomeType"
@@ -144,7 +145,7 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
                         <option value="main">Principal</option>
                         <option value="extra">Extra</option>
                         <option value="freelance">Freelance</option>
-                      </select>
+                      </ValidatedSelect>
                     </div>
                     <input
                       className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
@@ -159,7 +160,7 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
                     <div className="flex flex-wrap gap-2">
                       <FormSubmitButton pendingLabel="Salvando...">Salvar</FormSubmitButton>
                     </div>
-                  </ToastForm>
+                  </ValidatedForm>
                   <ToastForm action={deleteIncome} successMessage="Receita excluída." className="mt-2">
                     <input name="incomeId" type="hidden" value={income.id} />
                     <ConfirmDeleteButton confirmMessage="Excluir esta receita? Essa ação não pode ser desfeita.">

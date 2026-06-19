@@ -3,6 +3,7 @@ import { createCategory, setCategoryArchived, updateSettings } from "@/app/actio
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
+import { ValidatedForm, ValidatedInput } from "@/components/ui/validated-form";
 import { PageHeading } from "@/components/page-heading";
 import { requireUser } from "@/lib/auth/guard";
 import { getManagedCreditCards } from "@/lib/cards";
@@ -41,7 +42,7 @@ export default async function SettingsPage() {
         </DashboardCard>
 
         <DashboardCard title="Preferências de alerta">
-          <ToastForm action={updateSettings} successMessage="Preferências salvas." className="space-y-4">
+          <ValidatedForm action={updateSettings} successMessage="Preferências salvas." className="space-y-4">
             <div>
               <label
                 className="mb-2 block text-sm font-medium text-text-secondary"
@@ -49,7 +50,7 @@ export default async function SettingsPage() {
               >
                 Avisar com quantos dias de antecedência
               </label>
-              <input
+              <ValidatedInput
                 className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary"
                 defaultValue={alertDaysBefore}
                 id="alert-days"
@@ -66,13 +67,13 @@ export default async function SettingsPage() {
               </p>
             </div>
             <FormSubmitButton pendingLabel="Salvando...">Salvar preferências</FormSubmitButton>
-          </ToastForm>
+          </ValidatedForm>
         </DashboardCard>
       </section>
 
       <DashboardCard title="Categorias">
         <div className="grid gap-5 xl:grid-cols-[0.7fr_1fr]">
-          <ToastForm action={createCategory} successMessage="Categoria adicionada." className="space-y-4">
+          <ValidatedForm action={createCategory} successMessage="Categoria adicionada." resetOnSuccess className="space-y-4">
             <div>
               <label
                 className="mb-2 block text-sm font-medium text-text-secondary"
@@ -80,7 +81,7 @@ export default async function SettingsPage() {
               >
                 Nova categoria
               </label>
-              <input
+              <ValidatedInput
                 className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary placeholder:text-text-muted"
                 id="category-name"
                 name="name"
@@ -89,7 +90,7 @@ export default async function SettingsPage() {
               />
             </div>
             <FormSubmitButton pendingLabel="Adicionando...">Adicionar categoria</FormSubmitButton>
-          </ToastForm>
+          </ValidatedForm>
 
           <div className="space-y-2">
             {categories.length === 0 ? (
