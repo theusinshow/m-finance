@@ -45,6 +45,35 @@ export async function getCreditCards(userId: string) {
   return Array.from(uniqueCards.values());
 }
 
+export async function getInvoiceForCardMonth(userId: string, cardId: string, monthId: string) {
+  if (!db) {
+    return null;
+  }
+
+  const [row] = await db
+    .select({
+      id: creditCardInvoices.id,
+      amountCents: creditCardInvoices.amountCents,
+      dueDate: creditCardInvoices.dueDate,
+      status: creditCardInvoices.status,
+    })
+    .from(creditCardInvoices)
+    .where(
+      and(
+        eq(creditCardInvoices.userId, userId),
+        eq(creditCardInvoices.cardId, cardId),
+        eq(creditCardInvoices.monthId, monthId),
+      ),
+    )
+    .limit(1);
+
+  if (!row) {
+    return null;
+  }
+
+  return { ...row, status: derivePayableStatus(row.status, row.dueDate) };
+}
+
 export async function getInvoicesByMonth(monthId: string) {
   if (!db) {
     return [];

@@ -22,6 +22,13 @@
       "when": 1781880364024,
       "tag": "0002_closed_shocker",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781885241607,
+      "tag": "0003_sharp_thena",
+      "breakpoints": true
     }
   ]
 }

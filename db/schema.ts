@@ -175,6 +175,22 @@ export const creditCardInvoices = pgTable(
   ],
 );
 
+export const creditCardExpenses = pgTable(
+  "credit_card_expenses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    cardId: uuid("card_id").notNull().references(() => creditCards.id, { onDelete: "cascade" }),
+    monthId: uuid("month_id").notNull().references(() => months.id, { onDelete: "cascade" }),
+    description: text("description").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    purchaseDate: date("purchase_date"),
+    notes: text("notes"),
+    ...timestamps,
+  },
+  (table) => [check("credit_card_expenses_amount_positive", sql`${table.amountCents} > 0`)],
+);
+
 export const alerts = pgTable("alerts", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),

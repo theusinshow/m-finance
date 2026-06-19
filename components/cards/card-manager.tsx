@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { createCard, setCardActive, updateCard } from "@/app/actions/cards";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
@@ -109,19 +111,28 @@ export function CardManager({ cards }: { cards: ManagedCard[] }) {
                       </p>
                     </div>
                   </div>
-                  <ToastForm
-                    action={setCardActive}
-                    successMessage={card.isActive ? "Cartão inativado." : "Cartão reativado."}
-                  >
-                    <input name="cardId" type="hidden" value={card.id} />
-                    <input name="isActive" type="hidden" value={card.isActive ? "false" : "true"} />
-                    <FormSubmitButton
-                      pendingLabel={card.isActive ? "Inativando..." : "Reativando..."}
-                      variant="secondary"
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Link
+                      className="focus-ring inline-flex min-h-10 items-center gap-1.5 rounded-md border border-border-default bg-background-card px-3 text-xs font-semibold text-text-secondary transition duration-200 hover:border-border-strong hover:bg-background-hover hover:text-text-primary"
+                      href={`/app/cards/${card.id}`}
                     >
-                      {card.isActive ? "Inativar" : "Reativar"}
-                    </FormSubmitButton>
-                  </ToastForm>
+                      Abrir
+                      <ArrowRight size={14} aria-hidden="true" />
+                    </Link>
+                    <ToastForm
+                      action={setCardActive}
+                      successMessage={card.isActive ? "Cartão inativado." : "Cartão reativado."}
+                    >
+                      <input name="cardId" type="hidden" value={card.id} />
+                      <input name="isActive" type="hidden" value={card.isActive ? "false" : "true"} />
+                      <FormSubmitButton
+                        pendingLabel={card.isActive ? "Inativando..." : "Reativando..."}
+                        variant="secondary"
+                      >
+                        {card.isActive ? "Inativar" : "Reativar"}
+                      </FormSubmitButton>
+                    </ToastForm>
+                  </div>
                 </div>
 
                 <EditDisclosure className="mt-4">
