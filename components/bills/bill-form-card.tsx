@@ -1,5 +1,5 @@
-import { createBill, deleteBill, markBillAsPaid, markBillAsPending, updateBill } from "@/app/actions/bills";
-import { AddExpensePanel } from "@/components/bills/add-expense-panel";
+import { deleteBill, markBillAsPaid, markBillAsPending, updateBill } from "@/app/actions/bills";
+import { QuickAddExpense } from "@/components/bills/quick-add-expense";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
@@ -32,8 +32,6 @@ function formatCentsInput(cents: number) {
   return (cents / 100).toFixed(2).replace(".", ",");
 }
 
-const inputClass =
-  "focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary placeholder:text-text-muted";
 const editInputClass =
   "focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary";
 
@@ -52,84 +50,12 @@ export function BillFormCard({
   return (
     <div className="space-y-4">
       <DashboardCard accent>
-        <AddExpensePanel
-          summary={
-            <div>
-              <p className="text-sm font-medium uppercase tracking-[0.16em] text-text-muted">
-                A pagar neste mês
-              </p>
-              <p className="num mt-2 text-4xl font-semibold text-text-primary">
-                {formatCurrency(totalPendingCents)}
-              </p>
-              <p className="mt-2 text-sm text-text-muted">
-                {pending.length} em aberto · {paid.length} paga{paid.length === 1 ? "" : "s"}
-              </p>
-            </div>
-          }
-        >
-          <ValidatedForm action={createBill} successMessage="Despesa adicionada." resetOnSuccess className="grid gap-4 lg:grid-cols-2">
-            <div className="lg:col-span-2">
-              <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="bill-name">
-                Nome da despesa
-              </label>
-              <ValidatedInput className={inputClass} id="bill-name" name="name" placeholder="Internet" required />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="bill-amount">
-                Valor
-              </label>
-              <ValidatedInput
-                className={inputClass}
-                id="bill-amount"
-                inputMode="decimal"
-                name="amount"
-                placeholder="120,00"
-                required
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="bill-due-day">
-                Dia do vencimento
-              </label>
-              <ValidatedInput
-                className={inputClass}
-                id="bill-due-day"
-                inputMode="numeric"
-                max={31}
-                min={1}
-                name="dueDay"
-                placeholder="Opcional"
-                type="number"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-text-secondary" htmlFor="bill-category">
-                Categoria
-              </label>
-              <ValidatedSelect className={inputClass} id="bill-category" name="categoryId">
-                <option value="">Sem categoria</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </ValidatedSelect>
-            </div>
-            <label className="flex items-center gap-2 self-end pb-2 text-sm text-text-secondary">
-              <input className="h-4 w-4 accent-accent" name="isRecurring" type="checkbox" />
-              Despesa recorrente
-            </label>
-
-            <p className="text-xs leading-5 text-text-muted lg:col-span-2">
-              Só o dia do mês. Sem dia informado, a despesa vence no fim do mês.
-            </p>
-            <div className="lg:col-span-2">
-              <FormSubmitButton pendingLabel="Adicionando...">Adicionar despesa</FormSubmitButton>
-            </div>
-          </ValidatedForm>
-        </AddExpensePanel>
+        <QuickAddExpense
+          categories={categories}
+          paidCount={paid.length}
+          pendingCount={pending.length}
+          totalPendingCents={totalPendingCents}
+        />
       </DashboardCard>
 
       <DashboardCard description="Despesas pendentes e vencidas deste mês." title="A pagar">
