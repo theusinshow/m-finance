@@ -152,7 +152,10 @@ export const creditCards = pgTable(
     isActive: boolean("is_active").notNull().default(true),
     ...timestamps,
   },
-  (table) => [check("credit_cards_due_day_range", sql`${table.dueDay} between 1 and 31`)],
+  (table) => [
+    unique("credit_cards_user_name_type_unique").on(table.userId, table.name, table.cardType),
+    check("credit_cards_due_day_range", sql`${table.dueDay} between 1 and 31`),
+  ],
 );
 
 export const creditCardInvoices = pgTable(

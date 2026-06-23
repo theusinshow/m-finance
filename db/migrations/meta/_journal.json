@@ -29,6 +29,13 @@
       "when": 1781885241607,
       "tag": "0003_sharp_thena",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782227728763,
+      "tag": "0004_rapid_hellcat",
+      "breakpoints": true
     }
   ]
 }
