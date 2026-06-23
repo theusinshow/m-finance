@@ -5,8 +5,10 @@ import { bills, months } from "@/db/schema";
 import { db } from "@/db/client";
 import { requireUser } from "@/lib/auth/guard";
 import { getAppUserBySupabaseId, getNextMonthParts } from "@/lib/months";
+import { getActiveMonthForUser } from "@/lib/active-month";
 import { parseCurrencyToCents } from "@/lib/money";
 import { composeMonthDate, parseDueDay } from "@/lib/due-date";
+import { writeMonthSnapshot } from "@/lib/snapshot";
 
 function field(formData: FormData, name: string) {
   return String(formData.get(name) ?? "").trim();
@@ -18,6 +20,13 @@ export async function generateNextMonthFromReview(formData: FormData) {
 
   if (!db || !appUser) {
     throw new Error("Banco ou usuário interno não configurado.");
+  }
+
+  // Snapshot the month being left behind so the history series accrues on its
+  // own — the user no longer has to remember to save it before moving on.
+  const leavingMonth = await getActiveMonthForUser(appUser.id);
+  if (leavingMonth) {
+    await writeMonthSnapshot(appUser.id, leavingMonth.id);
   }
 
   const next = getNextMonthParts();
@@ -62,4 +71,5 @@ export async function generateNextMonthFromReview(formData: FormData) {
   revalidatePath("/app/dashboard");
   revalidatePath("/app/bills");
   revalidatePath("/app/calendar");
+  revalidatePath("/app/history");
 }

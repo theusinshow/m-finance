@@ -13,7 +13,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { UpcomingBillsList } from "@/components/dashboard/upcoming-bills-list";
 import { BalanceDisplay } from "@/components/dashboard/balance-display";
 import { StatusBreakdownChart } from "@/components/dashboard/status-breakdown-chart";
-import { MarketSoonCard } from "@/components/dashboard/market-soon-card";
+import { CategoryBreakdownChart } from "@/components/charts/category-breakdown-chart";
 import { Reveal } from "@/components/ui/reveal";
 import { calculateInternalAlerts } from "@/lib/calculations/alerts";
 import { getDashboardSummary } from "@/lib/calculations/dashboard";
@@ -45,6 +45,14 @@ export default async function DashboardPage() {
     bills: realBills,
     invoices: realInvoices,
   });
+  const categoryData = Object.values(
+    realBills.reduce<Record<string, { name: string; value: number }>>((acc, bill) => {
+      const name = bill.categoryName ?? "Sem categoria";
+      acc[name] ??= { name, value: 0 };
+      acc[name].value += bill.amountCents;
+      return acc;
+    }, {}),
+  );
   const totalOutstandingCents = summary.totalPendingCents + summary.totalOverdueCents;
   const totalCommittedCents = summary.totalBillsCents + summary.totalInvoicesCents;
   const allSettled = totalCommittedCents > 0 && totalOutstandingCents === 0;
@@ -160,17 +168,26 @@ export default async function DashboardPage() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
-        <DashboardCard
-          description="Como o comprometimento do mês está dividido."
-          title="Distribuição do mês"
-        >
-          <StatusBreakdownChart
-            overdueCents={summary.totalOverdueCents}
-            paidCents={summary.totalPaidCents}
-            pendingCents={summary.totalPendingCents}
-          />
-        </DashboardCard>
-        <MarketSoonCard />
+        <Reveal delay={0}>
+          <DashboardCard
+            description="Como o comprometimento do mês está dividido."
+            title="Distribuição do mês"
+          >
+            <StatusBreakdownChart
+              overdueCents={summary.totalOverdueCents}
+              paidCents={summary.totalPaidCents}
+              pendingCents={summary.totalPendingCents}
+            />
+          </DashboardCard>
+        </Reveal>
+        <Reveal delay={90}>
+          <DashboardCard
+            description="Para onde as despesas do mês estão indo."
+            title="Por categoria"
+          >
+            <CategoryBreakdownChart data={categoryData} />
+          </DashboardCard>
+        </Reveal>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1fr_0.8fr]">

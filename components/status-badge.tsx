@@ -1,5 +1,5 @@
 import { TriangleMark } from "@/components/brand/triangle-mark";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 type Status = "positive" | "fair" | "tight" | "negative" | "pending" | "paid" | "overdue";
 
@@ -38,14 +38,10 @@ export function StatusBadge({ status }: { status: Status }) {
   const config = statusMap[status];
 
   return (
-    <span
-      className={cn(
-        "inline-flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold",
-        config.className,
-      )}
-    >
-      <TriangleMark className="text-current" size={9} variant="solid" />
-      {config.label}
-    </span>
+    <Badge
+      label={config.label}
+      className={config.className}
+      icon={<TriangleMark className="text-current" size={9} variant="solid" />}
+    />
   );
 }

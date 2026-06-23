@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatShortDate } from "@/lib/formatters/date";
 import { dayFromIsoDate } from "@/lib/due-date";
+import { centsToInput } from "@/lib/money";
 
 type Invoice = {
   id: string;
@@ -20,10 +21,6 @@ type Invoice = {
   status: "pending" | "paid" | "overdue";
   cardType?: "personal" | "business";
 };
-
-function formatCentsInput(cents: number) {
-  return (cents / 100).toFixed(2).replace(".", ",");
-}
 
 export function InvoiceSummaryCard({ invoices }: { invoices: Invoice[] }) {
   return (
@@ -78,7 +75,7 @@ export function InvoiceSummaryCard({ invoices }: { invoices: Invoice[] }) {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <ValidatedInput
                     className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
-                    defaultValue={formatCentsInput(invoice.amountCents)}
+                    defaultValue={centsToInput(invoice.amountCents)}
                     inputMode="decimal"
                     name="amount"
                     required

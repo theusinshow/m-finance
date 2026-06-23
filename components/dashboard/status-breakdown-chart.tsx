@@ -3,6 +3,7 @@
 import { Cell, Pie, PieChart } from "recharts";
 import { InlineEmpty } from "@/components/ui/inline-empty";
 import { formatCurrency } from "@/lib/formatters/currency";
+import { STATUS_COLORS } from "@/lib/ui/colors";
 
 type Slice = { name: string; value: number; color: string };
 
@@ -20,9 +21,9 @@ export function StatusBreakdownChart({
   overdueCents: number;
 }) {
   const slices: Slice[] = [
-    { name: "Pago", value: paidCents, color: "#54D18A" },
-    { name: "Pendente", value: pendingCents, color: "#8A8780" },
-    { name: "Vencido", value: overdueCents, color: "#FB3640" },
+    { name: "Pago", value: paidCents, color: STATUS_COLORS.paid },
+    { name: "Pendente", value: pendingCents, color: STATUS_COLORS.pending },
+    { name: "Vencido", value: overdueCents, color: STATUS_COLORS.overdue },
   ];
   const total = slices.reduce((sum, slice) => sum + slice.value, 0);
   const data = slices.filter((slice) => slice.value > 0);

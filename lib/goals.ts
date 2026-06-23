@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { goalContributions, goals } from "@/db/schema";
 import type { GoalPriority, GoalStatus } from "@/db/schema";
@@ -16,45 +16,43 @@ export type GoalWithProgress = {
   remainingCents: number;
 };
 
-// Active work first, then paused, completed, and finally archived.
-const STATUS_ORDER: Record<GoalStatus, number> = {
-  active: 0,
-  paused: 1,
-  completed: 2,
-  archived: 3,
-};
-
 export async function getGoals(userId: string): Promise<GoalWithProgress[]> {
   if (!db) {
     return [];
   }
 
+  // Active work first, then paused, completed, and finally archived.
+  const statusOrder = sql`case ${goals.status}
+    when 'active' then 0
+    when 'paused' then 1
+    when 'completed' then 2
+    else 3
+  end`;
+
   const rows = await db
     .select()
     .from(goals)
     .where(eq(goals.userId, userId))
-    .orderBy(desc(goals.createdAt));
+    .orderBy(statusOrder, desc(goals.createdAt));
 
-  return rows
-    .map((goal) => {
-      const progressPercent =
-        goal.targetAmountCents > 0
-          ? Math.min(100, Math.round((goal.currentAmountCents / goal.targetAmountCents) * 100))
-          : 0;
-      return {
-        id: goal.id,
-        name: goal.name,
-        targetAmountCents: goal.targetAmountCents,
-        currentAmountCents: goal.currentAmountCents,
-        deadline: goal.deadline,
-        priority: goal.priority,
-        status: goal.status,
-        notes: goal.notes,
-        progressPercent,
-        remainingCents: Math.max(0, goal.targetAmountCents - goal.currentAmountCents),
-      };
-    })
-    .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
+  return rows.map((goal) => {
+    const progressPercent =
+      goal.targetAmountCents > 0
+        ? Math.min(100, Math.round((goal.currentAmountCents / goal.targetAmountCents) * 100))
+        : 0;
+    return {
+      id: goal.id,
+      name: goal.name,
+      targetAmountCents: goal.targetAmountCents,
+      currentAmountCents: goal.currentAmountCents,
+      deadline: goal.deadline,
+      priority: goal.priority,
+      status: goal.status,
+      notes: goal.notes,
+      progressPercent,
+      remainingCents: Math.max(0, goal.targetAmountCents - goal.currentAmountCents),
+    };
+  });
 }
 
 export async function getGoalContributions(userId: string, goalId: string) {

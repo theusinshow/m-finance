@@ -1,6 +1,6 @@
 import { TriangleMark } from "@/components/brand/triangle-mark";
+import { Badge } from "@/components/ui/badge";
 import type { RiskLevel } from "@/db/schema";
-import { cn } from "@/lib/utils";
 
 const riskMap: Record<RiskLevel, { label: string; className: string }> = {
   safe: {
@@ -21,19 +21,14 @@ const riskMap: Record<RiskLevel, { label: string; className: string }> = {
   },
 };
 
-export function RiskBadge({ risk, size = "sm" }: { risk: RiskLevel; size?: "sm" | "lg" }) {
+export function RiskBadge({ risk }: { risk: RiskLevel }) {
   const config = riskMap[risk];
 
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border font-semibold",
-        size === "lg" ? "h-9 px-3.5 text-sm" : "h-7 px-2.5 text-xs",
-        config.className,
-      )}
-    >
-      <TriangleMark className="text-current" size={size === "lg" ? 11 : 9} variant="solid" />
-      {config.label}
-    </span>
+    <Badge
+      label={config.label}
+      className={config.className}
+      icon={<TriangleMark className="text-current" size={9} variant="solid" />}
+    />
   );
 }

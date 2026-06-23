@@ -134,6 +134,35 @@ export default async function SettingsPage() {
         </div>
       </DashboardCard>
 
+      <DashboardCard title="Dados e backup">
+        <p className="text-sm leading-6 text-text-muted">
+          Exporte seus dados em CSV para abrir em planilha, ou baixe um backup completo em JSON.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <a
+            className="focus-ring inline-flex min-h-11 items-center rounded-md border border-border-subtle px-4 text-sm font-semibold text-text-secondary transition duration-200 hover:border-border-default hover:bg-background-hover hover:text-text-primary"
+            download
+            href="/api/export/month"
+          >
+            CSV do mês
+          </a>
+          <a
+            className="focus-ring inline-flex min-h-11 items-center rounded-md border border-border-subtle px-4 text-sm font-semibold text-text-secondary transition duration-200 hover:border-border-default hover:bg-background-hover hover:text-text-primary"
+            download
+            href="/api/export/history"
+          >
+            CSV do histórico
+          </a>
+          <a
+            className="focus-ring inline-flex min-h-11 items-center rounded-md border border-border-subtle px-4 text-sm font-semibold text-text-secondary transition duration-200 hover:border-border-default hover:bg-background-hover hover:text-text-primary"
+            download
+            href="/api/export/backup"
+          >
+            Backup JSON
+          </a>
+        </div>
+      </DashboardCard>
+
       <section className="grid gap-4 lg:grid-cols-2">
         <DashboardCard title="Cartões">
           <p className="text-sm leading-6 text-text-muted">

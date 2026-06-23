@@ -3,7 +3,9 @@ import Link from "next/link";
 import { History } from "lucide-react";
 import { signOut } from "@/app/actions/auth";
 import { MonthSwitcher } from "@/components/app-shell/month-switcher";
+import { NotificationsBell } from "@/components/app-shell/notifications-bell";
 import { SignOutButton } from "@/components/sign-out-button";
+import type { NotificationData } from "@/lib/notifications";
 
 type MonthOption = { value: string; label: string; isCurrent: boolean };
 
@@ -11,10 +13,12 @@ export function Topbar({
   user,
   monthOptions,
   activeMonthValue,
+  notifications,
 }: {
   user: User;
   monthOptions: MonthOption[];
   activeMonthValue: string;
+  notifications: NotificationData;
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-border-subtle bg-background-primary/90 px-4 py-3 backdrop-blur-xl md:px-6 lg:px-8">
@@ -29,6 +33,7 @@ export function Topbar({
             <History size={16} aria-hidden="true" />
             Salvar histórico
           </Link>
+          <NotificationsBell items={notifications.items} unreadCount={notifications.unreadCount} />
           <div className="flex min-h-11 items-center gap-3 rounded-md border border-border-subtle bg-background-secondary px-3 py-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-background-elevated text-xs font-semibold text-text-secondary">
               {user.email?.charAt(0).toUpperCase() ?? "M"}

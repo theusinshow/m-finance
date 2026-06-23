@@ -1,5 +1,5 @@
+import { Badge } from "@/components/ui/badge";
 import type { GoalPriority } from "@/db/schema";
-import { cn } from "@/lib/utils";
 
 const priorityMap: Record<GoalPriority, { label: string; className: string }> = {
   low: {
@@ -19,14 +19,5 @@ const priorityMap: Record<GoalPriority, { label: string; className: string }> = 
 export function PriorityBadge({ priority }: { priority: GoalPriority }) {
   const config = priorityMap[priority];
 
-  return (
-    <span
-      className={cn(
-        "inline-flex h-7 items-center rounded-md border px-2.5 text-xs font-semibold",
-        config.className,
-      )}
-    >
-      {config.label}
-    </span>
-  );
+  return <Badge label={config.label} className={config.className} />;
 }

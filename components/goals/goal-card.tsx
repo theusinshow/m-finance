@@ -10,6 +10,7 @@ import { ValidatedForm, ValidatedInput, ValidatedSelect } from "@/components/ui/
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatShortDate } from "@/lib/formatters/date";
 import type { GoalWithProgress } from "@/lib/goals";
+import { centsToInput } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 const editClass =
@@ -21,10 +22,6 @@ const statusLabel: Record<GoalWithProgress["status"], string | null> = {
   completed: "Concluída",
   archived: "Arquivada",
 };
-
-function centsToInput(cents: number) {
-  return (cents / 100).toFixed(2).replace(".", ",");
-}
 
 export function GoalCard({ goal }: { goal: GoalWithProgress }) {
   const isCompleted = goal.status === "completed";

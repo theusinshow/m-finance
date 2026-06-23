@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { formatShortDate } from "@/lib/formatters/date";
 import { dayFromIsoDate } from "@/lib/due-date";
+import { centsToInput } from "@/lib/money";
 
 type Category = {
   id: string;
@@ -27,10 +28,6 @@ type Bill = {
   status: "pending" | "paid" | "overdue";
   categoryName: string | null;
 };
-
-function formatCentsInput(cents: number) {
-  return (cents / 100).toFixed(2).replace(".", ",");
-}
 
 const editInputClass =
   "focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary";
@@ -137,7 +134,7 @@ function BillRow({
           <div className="grid gap-3 sm:grid-cols-2">
             <ValidatedInput
               className={editInputClass}
-              defaultValue={formatCentsInput(bill.amountCents)}
+              defaultValue={centsToInput(bill.amountCents)}
               inputMode="decimal"
               name="amount"
               required

@@ -7,6 +7,7 @@ import { ToastForm } from "@/components/toast-form";
 import { ValidatedForm, ValidatedInput, ValidatedSelect } from "@/components/ui/validated-form";
 import { InlineEmpty } from "@/components/ui/inline-empty";
 import { formatCurrency } from "@/lib/formatters/currency";
+import { centsToInput } from "@/lib/money";
 
 type Income = {
   id: string;
@@ -22,10 +23,6 @@ const incomeTypeLabel = {
   extra: "Extra",
   freelance: "Freelance",
 };
-
-function formatCentsInput(cents: number) {
-  return (cents / 100).toFixed(2).replace(".", ",");
-}
 
 export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
   return (
@@ -131,7 +128,7 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
                     <div className="grid gap-3 sm:grid-cols-2">
                       <ValidatedInput
                         className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary"
-                        defaultValue={formatCentsInput(income.amountCents)}
+                        defaultValue={centsToInput(income.amountCents)}
                         inputMode="decimal"
                         name="amount"
                         required

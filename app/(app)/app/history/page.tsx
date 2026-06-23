@@ -1,5 +1,6 @@
 import { saveCurrentMonthSnapshot } from "@/app/actions/history";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
+import { HistoryTrendChart } from "@/components/charts/history-trend-chart";
 import { EmptyState } from "@/components/empty-state";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
@@ -29,6 +30,13 @@ export default async function HistoryPage() {
   const user = await requireUser();
   const appUser = await getAppUserBySupabaseId(user.id);
   const snapshots = appUser ? await getMonthlySnapshots(appUser.id) : [];
+  // Snapshots come newest-first; the trend reads left-to-right oldest-first.
+  const trend = [...snapshots].reverse().map((snapshot) => ({
+    label: `${monthNames[snapshot.month - 1].slice(0, 3)}/${String(snapshot.year).slice(2)}`,
+    receita: snapshot.totalIncomeCents,
+    comprometido: snapshot.totalBillsCents + snapshot.totalInvoicesCents,
+    sobra: snapshot.estimatedRemainingCents,
+  }));
 
   return (
     <div className="space-y-6">
@@ -45,6 +53,12 @@ export default async function HistoryPage() {
         />
       ) : (
         <div className="grid gap-4">
+          <DashboardCard
+            description="Receita, comprometido e sobra ao longo dos meses salvos."
+            title="Evolução"
+          >
+            <HistoryTrendChart data={trend} />
+          </DashboardCard>
           {snapshots.map((snapshot) => (
             <DashboardCard key={snapshot.id}>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

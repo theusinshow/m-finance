@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/app-shell/sidebar";
 import { Topbar } from "@/components/app-shell/topbar";
 import { TriangleMark } from "@/components/brand/triangle-mark";
 import { ToastProvider } from "@/components/ui/toast";
+import type { NotificationData } from "@/lib/notifications";
 
 type MonthOption = { value: string; label: string; isCurrent: boolean };
 
@@ -12,11 +13,13 @@ export function AppShell({
   user,
   monthOptions,
   activeMonthValue,
+  notifications,
 }: {
   children: React.ReactNode;
   user: User;
   monthOptions: MonthOption[];
   activeMonthValue: string;
+  notifications: NotificationData;
 }) {
   return (
     <ToastProvider>
@@ -38,6 +41,7 @@ export function AppShell({
           <Topbar
           activeMonthValue={activeMonthValue}
           monthOptions={monthOptions}
+          notifications={notifications}
           user={user}
         />
           <main className="px-4 pb-24 pt-4 md:px-6 lg:px-8 lg:pb-8">{children}</main>
