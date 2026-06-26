@@ -71,6 +71,28 @@ export async function createCurrentMonthForUser(userId: string) {
   return month;
 }
 
+/**
+ * Returns the month row for the given parts, creating it if missing. Imported
+ * transactions can land in months the user never opened manually, so the sync
+ * needs to materialize them on demand.
+ */
+export async function ensureMonthForUser(userId: string, month: number, year: number) {
+  if (!db) {
+    throw new Error("Database is not configured.");
+  }
+
+  const [row] = await db
+    .insert(months)
+    .values({ userId, month, year })
+    .onConflictDoUpdate({
+      target: [months.userId, months.month, months.year],
+      set: { updatedAt: new Date() },
+    })
+    .returning();
+
+  return row;
+}
+
 export async function getMonthByParts(userId: string, month: number, year: number) {
   if (!db) {
     return null;

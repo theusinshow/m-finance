@@ -1,7 +1,7 @@
-import { Trash2 } from "lucide-react";
 import { addCardExpense, deleteCardExpense } from "@/app/actions/card-expenses";
 import { markInvoiceAsPaid, markInvoiceAsPending } from "@/app/actions/invoices";
 import { CardBrandMark } from "@/components/cards/card-brand-mark";
+import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { InlineEmpty } from "@/components/ui/inline-empty";
@@ -181,9 +181,9 @@ export function CardDetail({
                   <ToastForm action={deleteCardExpense} successMessage="Compra excluída.">
                     <input name="expenseId" type="hidden" value={expense.id} />
                     <input name="cardId" type="hidden" value={card.id} />
-                    <FormSubmitButton pendingLabel="..." variant="danger">
-                      <Trash2 size={14} aria-hidden="true" />
-                    </FormSubmitButton>
+                    <ConfirmDeleteButton confirmMessage="Excluir esta compra?">
+                      Excluir
+                    </ConfirmDeleteButton>
                   </ToastForm>
                 </div>
               </div>

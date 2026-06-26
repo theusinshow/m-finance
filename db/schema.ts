@@ -31,6 +31,15 @@ export const paymentType = pgEnum("payment_type", ["cash", "installment"]);
 export const riskLevel = pgEnum("risk_level", ["safe", "controlled", "tight", "critical"]);
 export const goalPriority = pgEnum("goal_priority", ["low", "medium", "high"]);
 export const goalStatus = pgEnum("goal_status", ["active", "paused", "completed", "archived"]);
+export const expenseSource = pgEnum("expense_source", ["manual", "openfinance"]);
+export const pluggyItemStatus = pgEnum("pluggy_item_status", [
+  "pending",
+  "updating",
+  "ready",
+  "error",
+]);
+export const subscriptionStatus = pgEnum("subscription_status", ["trial", "active", "canceled"]);
+export const subscriptionCycle = pgEnum("subscription_cycle", ["once", "monthly", "yearly"]);
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -189,9 +198,93 @@ export const creditCardExpenses = pgTable(
     amountCents: integer("amount_cents").notNull(),
     purchaseDate: date("purchase_date"),
     notes: text("notes"),
+    // Origin of the row: "manual" (user typed it) or "openfinance" (synced via
+    // an aggregator). External rows carry the provider transaction id so a
+    // re-sync upserts instead of duplicating.
+    source: expenseSource("source").notNull().default("manual"),
+    externalId: text("external_id"),
     ...timestamps,
   },
-  (table) => [check("credit_card_expenses_amount_positive", sql`${table.amountCents} > 0`)],
+  (table) => [
+    check("credit_card_expenses_amount_positive", sql`${table.amountCents} > 0`),
+    // NULLs are distinct in Postgres, so manual rows (externalId = null) never
+    // collide; only synced rows are deduped per user by provider id.
+    unique("credit_card_expenses_user_external_unique").on(table.userId, table.externalId),
+  ],
+);
+
+/**
+ * One row per bank connection opened through Pluggy. Maps a provider "item"
+ * (the consented connection) and one of its credit-card accounts to a local
+ * card, so the webhook/sync knows where to write the imported expenses.
+ */
+export const pluggyItems = pgTable(
+  "pluggy_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    cardId: uuid("card_id").references(() => creditCards.id, { onDelete: "set null" }),
+    itemId: text("item_id").notNull(),
+    accountId: text("account_id"),
+    connectorName: text("connector_name"),
+    status: pluggyItemStatus("status").notNull().default("pending"),
+    lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
+    error: text("error"),
+    ...timestamps,
+  },
+  (table) => [unique("pluggy_items_user_item_unique").on(table.userId, table.itemId)],
+);
+
+/**
+ * Subscriptions and free trials the user wants to be reminded about before the
+ * next charge. A free trial is just a subscription in `trial` status whose
+ * `nextChargeDate` is the day it converts to paid.
+ */
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    // Date of the next (or first, for trials) charge — the anchor for reminders.
+    nextChargeDate: date("next_charge_date").notNull(),
+    cycle: subscriptionCycle("cycle").notNull().default("monthly"),
+    status: subscriptionStatus("status").notNull().default("trial"),
+    // How many days before the charge to notify (defaults to 1 = "um dia antes").
+    reminderDaysBefore: integer("reminder_days_before").notNull().default(1),
+    // The charge date we already pushed a reminder for, so the cron never
+    // notifies twice for the same charge.
+    lastNotifiedFor: date("last_notified_for"),
+    notes: text("notes"),
+    ...timestamps,
+  },
+  (table) => [
+    check("subscriptions_amount_positive", sql`${table.amountCents} > 0`),
+    check(
+      "subscriptions_reminder_days_range",
+      sql`${table.reminderDaysBefore} between 0 and 30`,
+    ),
+  ],
+);
+
+/**
+ * Web Push subscriptions (one row per browser/device that opted in). The cron
+ * sends reminders to every active endpoint of a user; dead endpoints (410/404)
+ * are pruned on send.
+ */
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    userAgent: text("user_agent"),
+    ...timestamps,
+  },
+  (table) => [unique("push_subscriptions_endpoint_unique").on(table.endpoint)],
 );
 
 export const alerts = pgTable("alerts", {

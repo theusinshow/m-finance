@@ -1,10 +1,7 @@
 import { CheckCircle2 } from "lucide-react";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { CreateCurrentMonthCard } from "@/components/dashboard/create-current-month-card";
-import { EmptyState } from "@/components/empty-state";
 import { AlertsPanel } from "@/components/dashboard/alerts-panel";
-import { CompactCalendarCard } from "@/components/dashboard/compact-calendar-card";
-import { FinancialSummaryCard } from "@/components/dashboard/financial-summary-card";
 import { IncomeFormCard } from "@/components/dashboard/income-form-card";
 import { InvoiceSummaryCard } from "@/components/dashboard/invoice-summary-card";
 import { MonthGenerationReviewCard } from "@/components/dashboard/month-generation-review-card";
@@ -12,9 +9,7 @@ import { QuickActionButton } from "@/components/quick-action-button";
 import { StatusBadge } from "@/components/status-badge";
 import { UpcomingBillsList } from "@/components/dashboard/upcoming-bills-list";
 import { BalanceDisplay } from "@/components/dashboard/balance-display";
-import { StatusBreakdownChart } from "@/components/dashboard/status-breakdown-chart";
 import { CategoryBreakdownChart } from "@/components/charts/category-breakdown-chart";
-import { Reveal } from "@/components/ui/reveal";
 import { calculateInternalAlerts } from "@/lib/calculations/alerts";
 import { getDashboardSummary } from "@/lib/calculations/dashboard";
 import { formatCurrency } from "@/lib/formatters/currency";
@@ -116,8 +111,11 @@ export default async function DashboardPage() {
               )}
 
               <p className="mt-4 max-w-xl text-sm leading-6 text-text-muted">
-                Sobra estimada de {formatCurrency(summary.estimatedRemainingCents)} depois de tudo
-                pago (receita menos despesas e faturas do mês).
+                De {formatCurrency(summary.totalIncomeCents)} previstos este mês, sobra estimada de{" "}
+                <span className="font-medium text-text-secondary">
+                  {formatCurrency(summary.estimatedRemainingCents)}
+                </span>{" "}
+                depois de tudo pago.
               </p>
             </div>
             <div className="flex flex-col gap-3 lg:w-72">
@@ -135,96 +133,34 @@ export default async function DashboardPage() {
         <AlertsPanel alerts={alerts} />
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Reveal delay={0}>
-          <FinancialSummaryCard
-            label="Receita prevista"
-            value={formatCurrency(summary.totalIncomeCents)}
-            description="Principal + extras"
-          />
-        </Reveal>
-        <Reveal delay={70}>
-          <FinancialSummaryCard
-            label="Total comprometido"
-            value={formatCurrency(summary.totalBillsCents + summary.totalInvoicesCents)}
-            description="Despesas + faturas"
-          />
-        </Reveal>
-        <Reveal delay={140}>
-          <FinancialSummaryCard
-            label="Total pendente"
-            value={formatCurrency(summary.totalPendingCents)}
-            description="Ainda aberto no mês"
-          />
-        </Reveal>
-        <Reveal delay={210}>
-          <FinancialSummaryCard
-            label="Total vencido"
-            value={formatCurrency(summary.totalOverdueCents)}
-            description="Prioridade imediata"
-            tone="danger"
-          />
-        </Reveal>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
-        <Reveal delay={0}>
-          <DashboardCard
-            description="Como o comprometimento do mês está dividido."
-            title="Distribuição do mês"
-          >
-            <StatusBreakdownChart
-              overdueCents={summary.totalOverdueCents}
-              paidCents={summary.totalPaidCents}
-              pendingCents={summary.totalPendingCents}
-            />
-          </DashboardCard>
-        </Reveal>
-        <Reveal delay={90}>
-          <DashboardCard
-            description="Para onde as despesas do mês estão indo."
-            title="Por categoria"
-          >
-            <CategoryBreakdownChart data={categoryData} />
-          </DashboardCard>
-        </Reveal>
-      </section>
-
       <section className="grid gap-4 xl:grid-cols-[1fr_0.8fr]">
         <UpcomingBillsList bills={realBills} />
         <InvoiceSummaryCard invoices={realInvoices} />
       </section>
 
-      {currentMonth ? <IncomeFormCard incomes={realIncomes} /> : null}
+      {categoryData.length > 0 ? (
+        <DashboardCard description="Para onde as despesas do mês estão indo." title="Por categoria">
+          <CategoryBreakdownChart data={categoryData} />
+        </DashboardCard>
+      ) : null}
 
       {currentMonth && viewingCurrent && !nextMonth ? (
         <MonthGenerationReviewCard categories={categories} recurringBills={recurringBills} />
       ) : null}
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <CompactCalendarCard
-          events={[
-            ...realBills.map((bill) => ({
-              id: bill.id,
-              type: "bill" as const,
-              dueDate: bill.dueDate,
-              status: bill.status,
-            })),
-            ...realInvoices.map((invoice) => ({
-              id: invoice.id,
-              type: "invoice" as const,
-              dueDate: invoice.dueDate,
-              status: invoice.status,
-            })),
-          ]}
-        />
-        <EmptyState
-          title="Histórico pronto para uso"
-          description="Quando quiser preservar o estado do mês, salve um snapshot em Histórico."
-          actionLabel="Abrir histórico"
-          actionHref="/app/history"
-        />
-      </section>
+      {currentMonth ? (
+        <details className="group rounded-xl border border-border-subtle bg-background-card/95 p-5">
+          <summary className="flex cursor-pointer items-center justify-between gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-text-muted [&::-webkit-details-marker]:hidden">
+            Receitas do mês
+            <span className="text-xs font-medium normal-case tracking-normal text-text-muted group-open:hidden">
+              {formatCurrency(summary.totalIncomeCents)} previstos · abrir
+            </span>
+          </summary>
+          <div className="mt-4">
+            <IncomeFormCard incomes={realIncomes} />
+          </div>
+        </details>
+      ) : null}
     </div>
   );
 }

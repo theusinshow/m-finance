@@ -1,6 +1,5 @@
 import { createIncome, deleteIncome, updateIncome } from "@/app/actions/incomes";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
-import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
@@ -26,10 +25,10 @@ const incomeTypeLabel = {
 
 export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
   return (
-    <DashboardCard
-      description="Receita principal, extras e freelances previstos para o mês."
-      title="Receitas do mês"
-    >
+    <div>
+      <p className="mb-4 text-sm leading-5 text-text-muted">
+        Receita principal, extras e freelances previstos para o mês.
+      </p>
       <div className="grid gap-5 xl:grid-cols-[0.85fr_1fr]">
         <ValidatedForm action={createIncome} successMessage="Receita adicionada." resetOnSuccess className="space-y-4">
           <div>
@@ -169,6 +168,6 @@ export function IncomeFormCard({ incomes }: { incomes: Income[] }) {
           )}
         </div>
       </div>
-    </DashboardCard>
+    </div>
   );
 }

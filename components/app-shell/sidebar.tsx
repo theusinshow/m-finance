@@ -9,21 +9,36 @@ import {
   History,
   LayoutDashboard,
   ReceiptText,
+  RefreshCw,
   Settings,
   Target,
 } from "lucide-react";
 import { TriangleMark } from "@/components/brand/triangle-mark";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/app/calendar", label: "Calendário", icon: CalendarDays },
-  { href: "/app/bills", label: "Despesas", icon: ReceiptText },
-  { href: "/app/cards", label: "Cartões", icon: CreditCard },
-  { href: "/app/simulator", label: "Simulador", icon: Calculator },
-  { href: "/app/goals", label: "Metas", icon: Target },
-  { href: "/app/history", label: "Histórico", icon: History },
-  { href: "/app/settings", label: "Configurações", icon: Settings },
+const navGroups = [
+  {
+    label: null,
+    items: [
+      { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/app/bills", label: "Despesas", icon: ReceiptText },
+      { href: "/app/cards", label: "Cartões", icon: CreditCard },
+      { href: "/app/calendar", label: "Calendário", icon: CalendarDays },
+      { href: "/app/subscriptions", label: "Assinaturas", icon: RefreshCw },
+    ],
+  },
+  {
+    label: "Planejamento",
+    items: [
+      { href: "/app/simulator", label: "Simulador", icon: Calculator },
+      { href: "/app/goals", label: "Metas", icon: Target },
+      { href: "/app/history", label: "Histórico", icon: History },
+    ],
+  },
+  {
+    label: null,
+    items: [{ href: "/app/settings", label: "Configurações", icon: Settings }],
+  },
 ] as const;
 
 export function Sidebar() {
@@ -49,33 +64,42 @@ export function Sidebar() {
         </span>
       </Link>
 
-      <nav className="space-y-1">
-        {navItems.map((item) => {
-          const active = pathname === item.href;
-          const Icon = item.icon;
+      <nav className="space-y-6">
+        {navGroups.map((group, groupIndex) => (
+          <div className="space-y-1" key={group.label ?? `group-${groupIndex}`}>
+            {group.label ? (
+              <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-text-muted/70">
+                {group.label}
+              </p>
+            ) : null}
+            {group.items.map((item) => {
+              const active = pathname === item.href;
+              const Icon = item.icon;
 
-          return (
-            <Link
-              className={cn(
-                "focus-ring group relative flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium text-text-muted transition duration-200 hover:bg-background-elevated hover:text-text-secondary",
-                active && "border border-border-subtle bg-background-elevated text-text-primary shadow-lg shadow-black/10",
-              )}
-              href={item.href}
-              key={item.href}
-            >
-              <TriangleMark
-                className={cn(
-                  "shrink-0 transition-all duration-200",
-                  active ? "text-accent" : "text-text-muted opacity-50 group-hover:opacity-80",
-                )}
-                size={9}
-                variant={active ? "solid" : "outline"}
-              />
-              <Icon className="shrink-0" size={18} aria-hidden="true" />
-              {item.label}
-            </Link>
-          );
-        })}
+              return (
+                <Link
+                  className={cn(
+                    "focus-ring group relative flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium text-text-muted transition duration-200 hover:bg-background-elevated hover:text-text-secondary",
+                    active && "border border-border-subtle bg-background-elevated text-text-primary shadow-lg shadow-black/10",
+                  )}
+                  href={item.href}
+                  key={item.href}
+                >
+                  <TriangleMark
+                    className={cn(
+                      "shrink-0 transition-all duration-200",
+                      active ? "text-accent" : "text-text-muted opacity-50 group-hover:opacity-80",
+                    )}
+                    size={9}
+                    variant={active ? "solid" : "outline"}
+                  />
+                  <Icon className="shrink-0" size={18} aria-hidden="true" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className="clip-notch brand-grid absolute bottom-5 left-4 right-4 border border-border-subtle bg-background-secondary p-4">

@@ -1,5 +1,7 @@
-import Link from "next/link";
 import { createCategory, setCategoryArchived, updateSettings } from "@/app/actions/settings";
+import { syncConnection, unlinkConnection } from "@/app/actions/openfinance";
+import { ConnectBank } from "@/components/openfinance/connect-bank";
+import { PushToggle } from "@/components/push/push-toggle";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { ToastForm } from "@/components/toast-form";
@@ -9,6 +11,9 @@ import { PageHeading } from "@/components/page-heading";
 import { requireUser } from "@/lib/auth/guard";
 import { getManagedCreditCards } from "@/lib/cards";
 import { getAppUserBySupabaseId } from "@/lib/months";
+import { getPluggyConnections } from "@/lib/openfinance/items";
+import { isPluggyConfigured } from "@/lib/env";
+import { formatShortDate } from "@/lib/formatters/date";
 import { getAllCategories, getSettingsForUser } from "@/lib/settings";
 
 export default async function SettingsPage() {
@@ -17,8 +22,11 @@ export default async function SettingsPage() {
   const settings = appUser ? await getSettingsForUser(appUser.id) : null;
   const categories = appUser ? await getAllCategories(appUser.id) : [];
   const cards = appUser ? await getManagedCreditCards(appUser.id) : [];
+  const connections = appUser ? await getPluggyConnections(appUser.id) : [];
   const alertDaysBefore = settings?.alertDaysBefore ?? 3;
-  const activeCards = cards.filter((card) => card.isActive).length;
+  const cardOptions = cards
+    .filter((card) => card.isActive)
+    .map((card) => ({ id: card.id, name: card.name }));
 
   return (
     <div className="space-y-6">
@@ -134,6 +142,67 @@ export default async function SettingsPage() {
         </div>
       </DashboardCard>
 
+      <DashboardCard title="Notificações no celular">
+        <PushToggle />
+      </DashboardCard>
+
+      <DashboardCard title="Open Finance (Pluggy)">
+        {!isPluggyConfigured() ? (
+          <InlineEmpty>
+            Defina PLUGGY_CLIENT_ID e PLUGGY_CLIENT_SECRET no .env para conectar bancos.
+          </InlineEmpty>
+        ) : (
+          <div className="space-y-5">
+            <p className="text-sm leading-6 text-text-muted">
+              Conecte um banco para importar automaticamente as compras dos cartões de crédito. No
+              sandbox você pode testar com bancos fictícios.
+            </p>
+
+            <ConnectBank cards={cardOptions} />
+
+            {connections.length > 0 ? (
+              <div className="space-y-2">
+                {connections.map((connection) => (
+                  <div
+                    className="flex flex-wrap items-center gap-3 rounded-lg border border-border-subtle bg-background-elevated px-4 py-2.5"
+                    key={connection.id}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-text-primary">
+                        {connection.connectorName ?? "Conta"}
+                        {connection.cardName ? (
+                          <span className="text-text-muted"> → {connection.cardName}</span>
+                        ) : (
+                          <span className="text-status-tight"> · sem cartão vinculado</span>
+                        )}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        {connection.status}
+                        {connection.lastSyncedAt
+                          ? ` · sincronizado em ${formatShortDate(connection.lastSyncedAt)}`
+                          : " · nunca sincronizado"}
+                      </p>
+                    </div>
+                    <ToastForm action={syncConnection} successMessage="Sincronização concluída.">
+                      <input name="itemId" type="hidden" value={connection.itemId} />
+                      <FormSubmitButton pendingLabel="Sincronizando..." variant="secondary">
+                        Sincronizar agora
+                      </FormSubmitButton>
+                    </ToastForm>
+                    <ToastForm action={unlinkConnection} successMessage="Conexão removida.">
+                      <input name="itemId" type="hidden" value={connection.itemId} />
+                      <FormSubmitButton pendingLabel="Removendo..." variant="danger">
+                        Desvincular
+                      </FormSubmitButton>
+                    </ToastForm>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        )}
+      </DashboardCard>
+
       <DashboardCard title="Dados e backup">
         <p className="text-sm leading-6 text-text-muted">
           Exporte seus dados em CSV para abrir em planilha, ou baixe um backup completo em JSON.
@@ -163,29 +232,6 @@ export default async function SettingsPage() {
         </div>
       </DashboardCard>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <DashboardCard title="Cartões">
-          <p className="text-sm leading-6 text-text-muted">
-            {activeCards > 0
-              ? `${activeCards} cartão(ões) ativo(s).`
-              : "Nenhum cartão ativo no momento."}{" "}
-            O cadastro, edição e inativação de cartões ficam na tela de Cartões.
-          </p>
-          <Link
-            className="focus-ring mt-4 inline-flex min-h-11 w-fit items-center rounded-md border border-border-subtle px-4 text-sm font-semibold text-text-secondary transition duration-200 hover:border-border-default hover:bg-background-hover hover:text-text-primary"
-            href="/app/cards"
-          >
-            Gerenciar cartões
-          </Link>
-        </DashboardCard>
-
-        <DashboardCard title="Tema">
-          <p className="text-sm leading-6 text-text-muted">
-            Dark mode com tokens Coded by M definidos no Tailwind. O tema claro fica como
-            evolução futura.
-          </p>
-        </DashboardCard>
-      </section>
     </div>
   );
 }

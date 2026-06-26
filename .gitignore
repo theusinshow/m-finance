@@ -8,3 +8,6 @@ drizzle
 *.log
 *.tsbuildinfo
 next-env.d.ts
+
+# Impeccable critique snapshots (local)
+.impeccable/
