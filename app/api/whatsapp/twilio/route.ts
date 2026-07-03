@@ -4,6 +4,7 @@ import {
   isAllowedWhatsappSender,
   isAuthorizedWhatsappWebhook,
 } from "@/lib/whatsapp/auth";
+import { logWhatsappMessage } from "@/lib/whatsapp/audit";
 import { handleWhatsappCommand } from "@/lib/whatsapp/commands";
 import {
   createEmptyWhatsappResponse,
@@ -14,6 +15,7 @@ export const runtime = "nodejs";
 
 type TwilioWhatsappPayload = {
   From?: string;
+  To?: string;
   Body?: string;
   MessageSid?: string;
 };
@@ -21,6 +23,7 @@ type TwilioWhatsappPayload = {
 function parseTwilioPayload(formData: FormData): TwilioWhatsappPayload {
   return {
     From: String(formData.get("From") ?? ""),
+    To: String(formData.get("To") ?? ""),
     Body: String(formData.get("Body") ?? ""),
     MessageSid: String(formData.get("MessageSid") ?? ""),
   };
@@ -44,20 +47,87 @@ export async function POST(request: Request) {
   const payload = parseTwilioPayload(await request.formData());
 
   if (!isAllowedWhatsappSender(payload.From)) {
+    await logWhatsappMessage({
+      direction: "inbound",
+      status: "ignored",
+      from: payload.From,
+      to: payload.To,
+      body: payload.Body,
+      twilioMessageSid: payload.MessageSid,
+      error: "sender_not_allowed",
+    });
+
     return createEmptyWhatsappResponse();
   }
 
   const user = await getWhatsappOwnerUser();
 
   if (!user) {
-    return createWhatsappXmlResponse(
-      "Usuário autorizado não encontrado. Faça login no app antes de usar o WhatsApp.",
-    );
+    const response = "Usuário autorizado não encontrado. Faça login no app antes de usar o WhatsApp.";
+
+    await logWhatsappMessage({
+      direction: "inbound",
+      status: "error",
+      from: payload.From,
+      to: payload.To,
+      body: payload.Body,
+      twilioMessageSid: payload.MessageSid,
+      error: "authorized_user_not_found",
+    });
+
+    await logWhatsappMessage({
+      direction: "outbound",
+      status: "sent",
+      from: payload.To,
+      to: payload.From,
+      body: response,
+      error: "authorized_user_not_found",
+    });
+
+    return createWhatsappXmlResponse(response);
   }
 
-  const response = await handleWhatsappCommand({
-    message: payload.Body ?? "",
+  await logWhatsappMessage({
     userId: user.id,
+    direction: "inbound",
+    status: "received",
+    from: payload.From,
+    to: payload.To,
+    body: payload.Body,
+    twilioMessageSid: payload.MessageSid,
+  });
+
+  let response: string;
+
+  try {
+    response = await handleWhatsappCommand({
+      message: payload.Body ?? "",
+      phone: payload.From ?? "",
+      userId: user.id,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "unknown_error";
+
+    await logWhatsappMessage({
+      userId: user.id,
+      direction: "outbound",
+      status: "error",
+      from: payload.To,
+      to: payload.From,
+      body: "Não consegui processar sua mensagem agora.",
+      error: message,
+    });
+
+    return createWhatsappXmlResponse("Não consegui processar sua mensagem agora.");
+  }
+
+  await logWhatsappMessage({
+    userId: user.id,
+    direction: "outbound",
+    status: "sent",
+    from: payload.To,
+    to: payload.From,
+    body: response,
   });
 
   return createWhatsappXmlResponse(response);

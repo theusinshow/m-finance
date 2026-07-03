@@ -40,6 +40,26 @@ export const pluggyItemStatus = pgEnum("pluggy_item_status", [
 ]);
 export const subscriptionStatus = pgEnum("subscription_status", ["trial", "active", "canceled"]);
 export const subscriptionCycle = pgEnum("subscription_cycle", ["once", "monthly", "yearly"]);
+export const whatsappMessageDirection = pgEnum("whatsapp_message_direction", [
+  "inbound",
+  "outbound",
+]);
+export const whatsappMessageStatus = pgEnum("whatsapp_message_status", [
+  "received",
+  "sent",
+  "ignored",
+  "error",
+]);
+export const whatsappPendingActionType = pgEnum("whatsapp_pending_action_type", [
+  "create_card_expense",
+  "create_bill",
+]);
+export const whatsappPendingActionStatus = pgEnum("whatsapp_pending_action_status", [
+  "pending",
+  "confirmed",
+  "cancelled",
+  "expired",
+]);
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -312,6 +332,38 @@ export const pushSubscriptions = pgTable(
   },
   (table) => [unique("push_subscriptions_endpoint_unique").on(table.endpoint)],
 );
+
+export const whatsappMessages = pgTable(
+  "whatsapp_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    direction: whatsappMessageDirection("direction").notNull(),
+    status: whatsappMessageStatus("status").notNull(),
+    from: text("from_number"),
+    to: text("to_number"),
+    body: text("body"),
+    twilioMessageSid: text("twilio_message_sid"),
+    error: text("error"),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [unique("whatsapp_messages_twilio_sid_unique").on(table.twilioMessageSid)],
+);
+
+export const whatsappPendingActions = pgTable("whatsapp_pending_actions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  phone: text("phone").notNull(),
+  actionType: whatsappPendingActionType("action_type").notNull(),
+  status: whatsappPendingActionStatus("status").notNull().default("pending"),
+  summary: text("summary").notNull(),
+  payload: jsonb("payload").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  ...timestamps,
+});
 
 export const alerts = pgTable("alerts", {
   id: uuid("id").primaryKey().defaultRandom(),

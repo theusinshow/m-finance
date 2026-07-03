@@ -64,6 +64,13 @@
       "when": 1783083277851,
       "tag": "0008_bizarre_crusher_hogan",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1783087258914,
+      "tag": "0009_easy_daredevil",
+      "breakpoints": true
     }
   ]
 }
