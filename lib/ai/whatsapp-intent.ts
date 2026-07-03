@@ -69,7 +69,7 @@ export async function classifyWhatsappIntent(message: string): Promise<WhatsappI
           "Por enquanto só reconheça compras/despesas de cartão de crédito.",
           "Se a mensagem for consulta, saudação, comando, ambígua ou não indicar gasto, retorne intent unknown.",
           "Valores devem ser convertidos para centavos em BRL.",
-          "Se o cartão for mencionado, preencha cardNameHint; caso contrário, null.",
+          "Se o cartão for mencionado, preencha cardNameHint preservando qualificadores como pessoal, pj, business, empresa ou final do nome; caso contrário, null.",
           "Se não houver data explícita, use a data de hoje.",
           "Se houver parcelamento, use paymentType installment e installments; caso contrário cash e null.",
           "Exemplo de JSON:",

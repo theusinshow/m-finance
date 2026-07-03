@@ -64,7 +64,12 @@ export async function handleWhatsappCommand({
   }
 
   const intent = await classifyWhatsappIntent(message);
-  const pendingActionResult = await createPendingActionFromIntent({ intent, phone, userId });
+  const pendingActionResult = await createPendingActionFromIntent({
+    intent,
+    message,
+    phone,
+    userId,
+  });
 
   if (pendingActionResult) {
     return pendingActionResult.response;

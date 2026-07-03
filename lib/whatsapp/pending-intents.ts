@@ -8,7 +8,12 @@ function normalize(value: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+function tokenize(value: string) {
+  return normalize(value).split(" ").filter(Boolean);
 }
 
 function formatDate(value: string | null) {
@@ -18,7 +23,7 @@ function formatDate(value: string | null) {
   return `${day}/${month}/${year}`;
 }
 
-async function resolveCard(userId: string, cardNameHint: string | null) {
+async function resolveCard(userId: string, cardNameHint: string | null, originalMessage: string) {
   const cards = await getCreditCards(userId);
 
   if (cards.length === 0) {
@@ -36,17 +41,48 @@ async function resolveCard(userId: string, cardNameHint: string | null) {
     };
   }
 
+  const lookupText = normalize([cardNameHint, originalMessage].filter(Boolean).join(" "));
+  const lookupTokens = new Set(tokenize(lookupText));
   const hint = normalize(cardNameHint);
-  const matchedCards = cards.filter((card) => normalize(card.name).includes(hint));
 
-  if (matchedCards.length === 1) {
-    return { card: matchedCards[0], reason: null };
+  const scoredCards = cards
+    .map((card) => {
+      const cardName = normalize(card.name);
+      const cardTokens = tokenize(card.name);
+      let score = 0;
+
+      if (cardName === hint) score += 100;
+      if (lookupText.includes(cardName)) score += 80;
+      if (hint && cardName.includes(hint)) score += 40;
+      if (hint && hint.includes(cardName)) score += 40;
+
+      for (const token of cardTokens) {
+        if (lookupTokens.has(token)) score += token.length > 2 ? 10 : 2;
+      }
+
+      // Common local shorthand: "PJ" maps to business cards and "pessoal" to
+      // personal cards even when the AI only returns the base brand as hint.
+      if (lookupTokens.has("pj") && card.cardType === "business") score += 30;
+      if (lookupTokens.has("pessoal") && card.cardType === "personal") score += 30;
+      if (lookupTokens.has("empresa") && card.cardType === "business") score += 20;
+      if (lookupTokens.has("business") && card.cardType === "business") score += 20;
+
+      return { card, score };
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  const best = scoredCards[0];
+  const second = scoredCards[1];
+
+  if (best && (!second || best.score > second.score)) {
+    return { card: best.card, reason: null };
   }
 
   return {
     card: null,
     reason:
-      matchedCards.length > 1
+      scoredCards.length > 1
         ? `Encontrei mais de um cartão para "${cardNameHint}". Seja mais específico.`
         : `Não encontrei cartão ativo parecido com "${cardNameHint}". Ativos: ${cards.map((card) => card.name).join(", ")}.`,
   };
@@ -54,10 +90,12 @@ async function resolveCard(userId: string, cardNameHint: string | null) {
 
 export async function createPendingActionFromIntent({
   intent,
+  message,
   phone,
   userId,
 }: {
   intent: WhatsappIntent;
+  message: string;
   phone: string;
   userId: string;
 }) {
@@ -65,7 +103,7 @@ export async function createPendingActionFromIntent({
     return null;
   }
 
-  const { card, reason } = await resolveCard(userId, intent.cardNameHint);
+  const { card, reason } = await resolveCard(userId, intent.cardNameHint, message);
 
   if (!card) {
     return {
