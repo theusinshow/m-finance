@@ -30,7 +30,18 @@ const whatsappIntentSchema = z.discriminatedUnion("intent", [
     confidence: z.number().min(0).max(1),
   }),
   z.object({
+    intent: z.literal("mark_invoice_paid"),
+    cardNameHint: z.string().trim().min(1).nullable(),
+    confidence: z.number().min(0).max(1),
+  }),
+  z.object({
     intent: z.literal("cancel_last_action"),
+    confidence: z.number().min(0).max(1),
+  }),
+  z.object({
+    intent: z.literal("edit_last_action"),
+    newAmountCents: z.number().int().positive().nullable(),
+    newDescription: z.string().trim().min(1).nullable(),
     confidence: z.number().min(0).max(1),
   }),
   z.object({
@@ -128,7 +139,9 @@ export async function classifyWhatsappIntent(
           "- Parcelamento ('em 6x', 'parcelado em 10 vezes') -> create_card_expense com paymentType installment e installments.",
           "- 'todo mês', 'assinatura', 'recorrente' -> create_bill com isRecurring true.",
           "- 'paguei a conta de X', 'marquei X como pago', 'já paguei X' (referindo-se a conta existente) -> mark_bill_paid.",
+          "- 'paguei a fatura do X', 'marquei a fatura do itaú como paga' -> mark_invoice_paid.",
           "- 'cancela a última', 'desfaz o último lançamento', 'desfaz a última compra' -> cancel_last_action.",
+          "- 'edita a última compra pra 50', 'muda a última para almoço' -> edit_last_action com newAmountCents e/ou newDescription.",
           "- Consulta, saudação, comando, ambígua ou sem gasto -> unknown.",
           "",
           "Conversões:",

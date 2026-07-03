@@ -140,7 +140,19 @@ const pendingMarkPaidPayloadSchema = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+const pendingMarkInvoicePaidPayloadSchema = z.object({
+  cardId: z.string().uuid(),
+  cardName: z.string().trim().min(1),
+  confidence: z.number().min(0).max(1),
+});
+
 const pendingCancelLastPayloadSchema = z.object({
+  confidence: z.number().min(0).max(1),
+});
+
+const pendingEditLastPayloadSchema = z.object({
+  newAmountCents: z.number().int().positive().nullable(),
+  newDescription: z.string().trim().min(1).nullable(),
   confidence: z.number().min(0).max(1),
 });
 
@@ -251,6 +263,84 @@ async function createCancelLastPendingAction({
     : "Não consegui criar a ação pendente agora.";
 }
 
+async function createMarkInvoicePaidPendingAction({
+  userId,
+  phone,
+  payload,
+}: {
+  userId: string;
+  phone: string;
+  payload: z.infer<typeof pendingMarkInvoicePaidPayloadSchema>;
+}) {
+  const parsed = pendingMarkInvoicePaidPayloadSchema.safeParse(payload);
+  if (!parsed.success) {
+    return "Não consegui interpretar essa marcação de fatura. Tente novamente.";
+  }
+  const invoice = parsed.data;
+  const summary = [
+    "Confirmar marcação de pagamento?",
+    "",
+    `Fatura: ${invoice.cardName}`,
+    "",
+    "Responda sim ou não.",
+  ].join("\n");
+
+  const pendingAction = await createWhatsappPendingAction({
+    userId,
+    phone,
+    actionType: "mark_invoice_paid",
+    summary,
+    payload: invoice,
+  });
+
+  return pendingAction
+    ? summary
+    : "Não consegui criar a ação pendente agora.";
+}
+
+async function createEditLastPendingAction({
+  userId,
+  phone,
+  payload,
+}: {
+  userId: string;
+  phone: string;
+  payload: z.infer<typeof pendingEditLastPayloadSchema>;
+}) {
+  const parsed = pendingEditLastPayloadSchema.safeParse(payload);
+  if (!parsed.success) {
+    return "Não consegui interpretar essa edição. Tente novamente.";
+  }
+  const edit = parsed.data;
+  const changes: string[] = [];
+  if (edit.newAmountCents) changes.push(`Novo valor: ${formatCurrency(edit.newAmountCents)}`);
+  if (edit.newDescription) changes.push(`Nova descrição: ${edit.newDescription}`);
+
+  if (changes.length === 0) {
+    return "Não entendi o que quer editar. Diga o novo valor ou descrição.";
+  }
+
+  const summary = [
+    "Confirmar edição do último lançamento?",
+    "",
+    ...changes,
+    "",
+    "Responda sim ou não.",
+  ].join("\n");
+
+  const pendingAction = await createWhatsappPendingAction({
+    userId,
+    phone,
+    actionType: "edit_last_action",
+    summary,
+    payload: edit,
+  });
+
+  return pendingAction
+    ? summary
+    : "Não consegui criar a ação pendente agora.";
+}
+
 async function createBillPendingAction({
   userId,
   phone,
@@ -340,11 +430,54 @@ export async function createPendingActionFromIntent({
     };
   }
 
+  if (intent.intent === "mark_invoice_paid") {
+    // Resolve o cartão a partir do cardNameHint antes de criar a pendência.
+    const { card, reason } = await resolveCard(userId, intent.cardNameHint, message);
+    if (!card) {
+      return {
+        created: true as const,
+        response: `${reason ?? "Não encontrei a fatura."}\n\nResponda com o nome do cartão para continuar.`,
+      };
+    }
+
+    const response = await createMarkInvoicePaidPendingAction({
+      userId,
+      phone,
+      payload: {
+        cardId: card.id,
+        cardName: card.name,
+        confidence: intent.confidence,
+      },
+    });
+
+    return {
+      created: true as const,
+      response,
+    };
+  }
+
   if (intent.intent === "cancel_last_action") {
     const response = await createCancelLastPendingAction({
       userId,
       phone,
       payload: { confidence: intent.confidence },
+    });
+
+    return {
+      created: true as const,
+      response,
+    };
+  }
+
+  if (intent.intent === "edit_last_action") {
+    const response = await createEditLastPendingAction({
+      userId,
+      phone,
+      payload: {
+        newAmountCents: intent.newAmountCents,
+        newDescription: intent.newDescription,
+        confidence: intent.confidence,
+      },
     });
 
     return {

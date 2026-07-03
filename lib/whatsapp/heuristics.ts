@@ -432,6 +432,9 @@ const PAID_VERB_TRIGGERS = new Set([
 const PAID_EXISTING_MARKERS =
   /\b(?:conta\s+de|a\s+conta|o\s+pagamento|a\s+fatura|como\s+pago|como\s+quitad[oa])\b/;
 
+// Marcador específico de fatura ("a fatura do X", "fatura do itaú").
+const INVOICE_PAID_MARKER = /\b(?:a\s+fatura|fatura\s+do|fatura\s+da|fatura\s+de)\b/;
+
 /**
  * Camada determinística para "marcar conta como paga". Reconhece verbos de
  * pagamento (paguei/marquei/quitei) + referência a conta/fatura existente.
@@ -513,5 +516,90 @@ export async function tryHeuristicCancelLast(
   return {
     intent: "cancel_last_action",
     confidence: 0.9,
+  };
+}
+
+const EDIT_VERB_TRIGGERS = new Set([
+  "edita",
+  "editar",
+  "edite",
+  "muda",
+  "mudar",
+  "mude",
+  "altera",
+  "alterar",
+  "altere",
+  "corrige",
+  "corrigir",
+  "corrija",
+]);
+
+/**
+ * Camada determinística para "editar último lançamento". Reconhece verbos de
+ * edição + "último(a)" + (valor ou descrição). O "para/pra" liga o novo valor.
+ *
+ * Casos cobertos:
+ * - "edita a última compra pra 50 reais"
+ * - "muda a última para 50"
+ * - "corrige o último lançamento para almoço"
+ * - "altera a última compra pra 32 no almoço"
+ */
+export async function tryHeuristicEditLast(
+  message: string,
+): Promise<WhatsappIntent | null> {
+  if (!message.trim()) return null;
+  const normalized = normalize(message);
+  const tokens = normalized.split(" ").filter(Boolean);
+  if (tokens.length === 0) return null;
+
+  const hasTrigger = tokens.some((token) => EDIT_VERB_TRIGGERS.has(token));
+  if (!hasTrigger) return null;
+
+  if (!/\bultim[oa]\b/.test(normalized)) return null;
+
+  const newAmountCents = parseAmountCents(message);
+  const newDescription = extractBillDescription(message, normalized);
+
+  if (!newAmountCents && !newDescription) return null;
+
+  return {
+    intent: "edit_last_action",
+    newAmountCents: newAmountCents ?? null,
+    newDescription: newDescription ?? null,
+    confidence: 0.8,
+  };
+}
+
+/**
+ * Camada determinística para "marcar fatura como paga". Detecta verbos de
+ * pagamento + "fatura do/da X". Extrai o cardNameHint do trecho após "fatura".
+ *
+ * Casos cobertos:
+ * - "paguei a fatura do itaú"
+ * - "marquei a fatura do nubank pessoal como paga"
+ * - "quitei a fatura do nubank pj"
+ */
+export async function tryHeuristicMarkInvoicePaid(
+  message: string,
+): Promise<WhatsappIntent | null> {
+  if (!message.trim()) return null;
+  const normalized = normalize(message);
+  const tokens = normalized.split(" ").filter(Boolean);
+  if (tokens.length === 0) return null;
+
+  const hasTrigger = tokens.some((token) => PAID_VERB_TRIGGERS.has(token));
+  if (!hasTrigger) return null;
+
+  if (parseAmountCents(message)) return null;
+  if (!INVOICE_PAID_MARKER.test(normalized)) return null;
+
+  // Extrai o nome do cartão após "fatura do/da/de".
+  const match = /fatura\s+(?:do|da|de)\s+([a-z0-9]+(?:\s+[a-z0-9]+){0,2})/.exec(normalized);
+  const cardNameHint = match ? match[1].trim() : null;
+
+  return {
+    intent: "mark_invoice_paid",
+    cardNameHint,
+    confidence: 0.8,
   };
 }

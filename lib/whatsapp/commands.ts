@@ -6,13 +6,14 @@ import {
   getWhatsappMonthlyComparison,
   getWhatsappMonthlySummary,
   getWhatsappOverdueItems,
+  parseMonthOffset,
 } from "@/lib/finance/whatsapp-summary";
 import {
   getActiveWhatsappPendingAction,
   updateWhatsappPendingActionStatus,
 } from "@/lib/whatsapp/audit";
 import { executeWhatsappPendingAction } from "@/lib/whatsapp/action-executor";
-import { tryHeuristicBill, tryHeuristicCancelLast, tryHeuristicCardExpense, tryHeuristicMarkPaid } from "@/lib/whatsapp/heuristics";
+import { tryHeuristicBill, tryHeuristicCancelLast, tryHeuristicCardExpense, tryHeuristicEditLast, tryHeuristicMarkInvoicePaid, tryHeuristicMarkPaid } from "@/lib/whatsapp/heuristics";
 import {
   createPendingActionFromIntent,
   resolvePendingCardExpense,
@@ -23,7 +24,9 @@ const CONFIRMABLE_ACTIONS = new Set([
   "create_card_expense",
   "create_bill",
   "mark_bill_paid",
+  "mark_invoice_paid",
   "cancel_last_action",
+  "edit_last_action",
 ]);
 
 export async function handleWhatsappCommand({
@@ -95,13 +98,14 @@ export async function handleWhatsappCommand({
     return getWhatsappMonthlyComparison(userId);
   }
 
-  // Consultas ricas por cartão: "quanto gastei no nubank", "fatura do itaú",
-  // "saldo do nubank pj". Padrão determinístico — sem IA.
+  // Consultas ricas por cartão: "quanto gastei no nubank", "fatura do itaú de
+  // agosto", "saldo do nubank pj". Padrão determinístico — sem IA.
   const cardQueryMatch = normalized.match(
     /(?:quanto\s+(?:gastei|gasto)|gastos|fatura|saldo)\s+(?:no|na|do|da|de)\s+([a-z0-9]+(?:\s+[a-z0-9]+){0,2})/,
   );
   if (cardQueryMatch) {
-    return getWhatsappCardSummary(userId, cardQueryMatch[1]);
+    const monthOffset = parseMonthOffset(normalized) ?? 0;
+    return getWhatsappCardSummary(userId, cardQueryMatch[1], monthOffset);
   }
 
   // Camada barata e determinística primeiro: resolve os padrões mais comuns de
@@ -114,7 +118,9 @@ export async function handleWhatsappCommand({
     (await tryHeuristicCardExpense(message, cards)) ??
     (await tryHeuristicBill(message, cards)) ??
     (await tryHeuristicMarkPaid(message)) ??
-    (await tryHeuristicCancelLast(message));
+    (await tryHeuristicMarkInvoicePaid(message)) ??
+    (await tryHeuristicCancelLast(message)) ??
+    (await tryHeuristicEditLast(message));
   const intent =
     heuristicIntent ?? (await classifyWhatsappIntent(message, { cards }));
   const pendingActionResult = await createPendingActionFromIntent({

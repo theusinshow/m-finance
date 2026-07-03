@@ -56,6 +56,8 @@ export const whatsappPendingActionType = pgEnum("whatsapp_pending_action_type", 
   "resolve_card_expense",
   "mark_bill_paid",
   "cancel_last_action",
+  "edit_last_action",
+  "mark_invoice_paid",
 ]);
 export const whatsappPendingActionStatus = pgEnum("whatsapp_pending_action_status", [
   "pending",
@@ -171,6 +173,10 @@ export const bills = pgTable(
     status: billStatus("status").notNull().default("pending"),
     notes: text("notes"),
     paidAt: timestamp("paid_at", { withTimezone: true }),
+    // Rastreia a pendência do WhatsApp que criou essa conta, para que o
+    // "cancela a última" reverta exatamente as linhas certas (inclusive
+    // recorrências com 12 contas de uma vez).
+    whatsappPendingActionId: uuid("whatsapp_pending_action_id"),
     ...timestamps,
   },
   (table) => [
@@ -243,6 +249,10 @@ export const creditCardExpenses = pgTable(
     installmentId: uuid("installment_id"),
     installmentNumber: integer("installment_number"),
     installmentTotal: integer("installment_total"),
+    // Rastreia a pendência do WhatsApp que criou essa despesa, para que o
+    // "cancela a última" reverta exatamente as linhas certas (inclusive
+    // parcelamentos com várias linhas por installmentId).
+    whatsappPendingActionId: uuid("whatsapp_pending_action_id"),
     ...timestamps,
   },
   (table) => [

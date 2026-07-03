@@ -6,7 +6,12 @@ import { getCreditCards, getInvoicesByMonth } from "@/lib/cards";
 import { getDashboardSummary } from "@/lib/calculations/dashboard";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { getIncomesByMonth } from "@/lib/incomes";
-import { getCurrentMonthForUser, getMonthByParts, getCurrentMonthParts } from "@/lib/months";
+import {
+  getCurrentMonthForUser,
+  getMonthByParts,
+  getCurrentMonthParts,
+  getMonthPartsAtOffset,
+} from "@/lib/months";
 
 function formatDate(value: string) {
   const [year, month, day] = value.split("-");
@@ -110,6 +115,46 @@ function normalizeForLookup(value: string) {
     .trim();
 }
 
+const MONTH_NAMES = [
+  "janeiro",
+  "fevereiro",
+  "marco",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+];
+
+/**
+ * Tenta extrair um mês/ano da mensagem. Retorna o offset relativo ao mês
+ * atual (0 = atual, 1 = próximo, -1 = anterior) ou null se não houver menção.
+ * Aceita "agosto", "de agosto", "agosto de 2026", "mes que vem", "mes passado".
+ */
+export function parseMonthOffset(normalized: string): number | null {
+  if (/\bmes\s+que\s+vem\b|\bproximo\s+mes\b/.test(normalized)) return 1;
+  if (/\bmes\s+passado\b|\banterior\b/.test(normalized)) return -1;
+
+  const match = /\b(?:de\s+)?(janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)(?:\s+de\s+(\d{4}))?\b/.exec(
+    normalized,
+  );
+  if (match) {
+    const monthIdx = MONTH_NAMES.indexOf(match[1]);
+    if (monthIdx === -1) return null;
+    const current = getCurrentMonthParts();
+    const targetYear = match[2] ? Number(match[2]) : current.year;
+    let offset = (targetYear - current.year) * 12 + (monthIdx + 1 - current.month);
+    // "agosto" sem ano, se já passou, assume do ano que vem.
+    if (!match[2] && offset < 0) offset += 12;
+    return offset;
+  }
+  return null;
+}
+
 async function resolveCardByName(userId: string, hint: string) {
   const cards = await getCreditCards(userId);
   if (cards.length === 0) return null;
@@ -135,14 +180,28 @@ async function resolveCardByName(userId: string, hint: string) {
 }
 
 /**
- * Resumo de um cartão específico: total gasto no mês atual e valor da fatura.
- * Responde a "quanto gastei no nubank", "fatura do itaú", "saldo do nubank pj".
+ * Resumo de um cartão específico: total gasto no mês e valor da fatura.
+ * Responde a "quanto gastei no nubank", "fatura do itaú", "fatura do nubank de
+ * agosto". Quando monthOffset é informado, consulta o mês relativo ao atual.
  */
-export async function getWhatsappCardSummary(userId: string, cardHint: string) {
+export async function getWhatsappCardSummary(
+  userId: string,
+  cardHint: string,
+  monthOffset = 0,
+) {
   if (!db) return "Banco indisponível no momento.";
 
-  const month = await getCurrentMonthForUser(userId);
+  let month = await getCurrentMonthForUser(userId);
   if (!month) return "Ainda não existe mês atual criado no M Finance.";
+
+  if (monthOffset !== 0) {
+    const parts = getMonthPartsAtOffset(month.month, month.year, monthOffset);
+    const targetMonth = await getMonthByParts(userId, parts.month, parts.year);
+    if (!targetMonth) {
+      return `Ainda não existe mês de ${formatMonthName(parts.month, parts.year)} criado no app.`;
+    }
+    month = targetMonth;
+  }
 
   const card = await resolveCardByName(userId, cardHint);
   if (!card) {
@@ -151,9 +210,7 @@ export async function getWhatsappCardSummary(userId: string, cardHint: string) {
     return `Não encontrei um cartão chamado "${cardHint}". Ativos: ${list}.`;
   }
 
-  const [invoice] = await Promise.all([
-    getInvoicesByMonth(month.id).then((rows) => rows.find((r) => r.name === card.name)),
-  ]);
+  const invoice = (await getInvoicesByMonth(month.id)).find((r) => r.name === card.name);
 
   const [expenseRow] = await db
     .select({ total: sql<number>`coalesce(sum(${creditCardExpenses.amountCents}), 0)::int` })
@@ -173,7 +230,9 @@ export async function getWhatsappCardSummary(userId: string, cardHint: string) {
     `${card.name} (${card.cardType === "business" ? "PJ" : "pessoal"}) — ${label}`,
     "",
     `Gastos no mês: ${formatCurrency(total)}`,
-    invoice ? `Fatura: ${formatCurrency(invoice.amountCents)} — vence ${formatDate(invoice.dueDate)} (${invoice.status === "paid" ? "paga" : invoice.status === "overdue" ? "vencida" : "pendente"})` : "Fatura: ainda não gerada",
+    invoice
+      ? `Fatura: ${formatCurrency(invoice.amountCents)} — vence ${formatDate(invoice.dueDate)} (${invoice.status === "paid" ? "paga" : invoice.status === "overdue" ? "vencida" : "pendente"})`
+      : "Fatura: ainda não gerada",
   ].join("\n");
 }
 
