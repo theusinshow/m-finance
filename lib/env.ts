@@ -21,6 +21,10 @@ export const env = {
   twilioWhatsappFrom: process.env.TWILIO_WHATSAPP_FROM ?? "",
   whatsappAllowedPhone: process.env.WHATSAPP_ALLOWED_PHONE ?? "",
   whatsappWebhookSecret: process.env.WHATSAPP_WEBHOOK_SECRET ?? "",
+  // DeepSeek uses an OpenAI-compatible API.
+  deepseekApiKey: process.env.DEEPSEEK_API_KEY ?? "",
+  deepseekBaseUrl: process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com",
+  deepseekModel: process.env.DEEPSEEK_MODEL ?? "deepseek-v4-flash",
 };
 
 export function isSupabaseConfigured() {
@@ -46,4 +50,8 @@ export function isPushConfigured() {
 
 export function isTwilioConfigured() {
   return Boolean(env.twilioAccountSid && env.twilioAuthToken && env.twilioWhatsappFrom);
+}
+
+export function isDeepSeekConfigured() {
+  return Boolean(env.deepseekApiKey && env.deepseekBaseUrl && env.deepseekModel);
 }

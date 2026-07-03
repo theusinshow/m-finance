@@ -1,3 +1,4 @@
+import { classifyWhatsappIntent } from "@/lib/ai/whatsapp-intent";
 import {
   getWhatsappDueItems,
   getWhatsappMonthlySummary,
@@ -6,6 +7,7 @@ import {
   getActiveWhatsappPendingAction,
   updateWhatsappPendingActionStatus,
 } from "@/lib/whatsapp/audit";
+import { createPendingActionFromIntent } from "@/lib/whatsapp/pending-intents";
 import { WHATSAPP_HELP_MESSAGE } from "@/lib/whatsapp/responses";
 
 export async function handleWhatsappCommand({
@@ -59,6 +61,13 @@ export async function handleWhatsappCommand({
 
   if (["vencimentos", "contas", "pendencias"].includes(normalized)) {
     return getWhatsappDueItems(userId);
+  }
+
+  const intent = await classifyWhatsappIntent(message);
+  const pendingActionResult = await createPendingActionFromIntent({ intent, phone, userId });
+
+  if (pendingActionResult) {
+    return pendingActionResult.response;
   }
 
   return [

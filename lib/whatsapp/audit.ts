@@ -5,11 +5,13 @@ import {
   whatsappPendingActions,
   whatsappMessageDirection,
   whatsappMessageStatus,
+  whatsappPendingActionType,
   whatsappPendingActionStatus,
 } from "@/db/schema";
 
 type WhatsappMessageDirection = (typeof whatsappMessageDirection.enumValues)[number];
 type WhatsappMessageStatus = (typeof whatsappMessageStatus.enumValues)[number];
+type WhatsappPendingActionType = (typeof whatsappPendingActionType.enumValues)[number];
 type WhatsappPendingActionStatus = (typeof whatsappPendingActionStatus.enumValues)[number];
 
 export async function logWhatsappMessage(input: {
@@ -61,6 +63,36 @@ export async function getActiveWhatsappPendingAction(userId: string, phone: stri
     )
     .orderBy(desc(whatsappPendingActions.createdAt))
     .limit(1);
+
+  return pendingAction ?? null;
+}
+
+export async function createWhatsappPendingAction(input: {
+  userId: string;
+  phone: string;
+  actionType: WhatsappPendingActionType;
+  summary: string;
+  payload: unknown;
+  expiresInMinutes?: number;
+}) {
+  if (!db) {
+    return null;
+  }
+
+  const expiresAt = new Date();
+  expiresAt.setMinutes(expiresAt.getMinutes() + (input.expiresInMinutes ?? 15));
+
+  const [pendingAction] = await db
+    .insert(whatsappPendingActions)
+    .values({
+      userId: input.userId,
+      phone: input.phone,
+      actionType: input.actionType,
+      summary: input.summary,
+      payload: input.payload,
+      expiresAt,
+    })
+    .returning();
 
   return pendingAction ?? null;
 }

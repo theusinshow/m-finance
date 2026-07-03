@@ -18,6 +18,7 @@
     "drizzle-orm": "latest",
     "lucide-react": "latest",
     "next": "latest",
+    "openai": "^6.45.0",
     "pluggy-sdk": "^0.89.0",
     "postgres": "latest",
     "react": "latest",
