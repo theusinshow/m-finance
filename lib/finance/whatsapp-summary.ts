@@ -1,9 +1,12 @@
+import { and, eq, sql } from "drizzle-orm";
+import { db } from "@/db/client";
+import { creditCardExpenses } from "@/db/schema";
 import { getBillsByMonth } from "@/lib/bills";
-import { getInvoicesByMonth } from "@/lib/cards";
+import { getCreditCards, getInvoicesByMonth } from "@/lib/cards";
 import { getDashboardSummary } from "@/lib/calculations/dashboard";
 import { formatCurrency } from "@/lib/formatters/currency";
 import { getIncomesByMonth } from "@/lib/incomes";
-import { getCurrentMonthForUser } from "@/lib/months";
+import { getCurrentMonthForUser, getMonthByParts, getCurrentMonthParts } from "@/lib/months";
 
 function formatDate(value: string) {
   const [year, month, day] = value.split("-");
@@ -96,4 +99,193 @@ export async function getWhatsappDueItems(userId: string) {
         `• ${item.type}: ${item.name} — ${formatCurrency(item.amountCents)} — ${formatDate(item.dueDate)} (${item.status === "overdue" ? "vencido" : "pendente"})`,
     ),
   ].join("\n");
+}
+
+function normalizeForLookup(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+async function resolveCardByName(userId: string, hint: string) {
+  const cards = await getCreditCards(userId);
+  if (cards.length === 0) return null;
+  const lookup = normalizeForLookup(hint);
+  for (const card of cards) {
+    if (normalizeForLookup(card.name) === lookup) return card;
+  }
+  for (const card of cards) {
+    if (normalizeForLookup(card.name).includes(lookup) || lookup.includes(normalizeForLookup(card.name))) {
+      return card;
+    }
+  }
+  // Shorthand pj/pessoal
+  if (/\bpj\b/.test(lookup)) {
+    const business = cards.find((c) => c.cardType === "business");
+    if (business) return business;
+  }
+  if (/\bpessoal\b/.test(lookup)) {
+    const personal = cards.find((c) => c.cardType === "personal");
+    if (personal) return personal;
+  }
+  return null;
+}
+
+/**
+ * Resumo de um cartão específico: total gasto no mês atual e valor da fatura.
+ * Responde a "quanto gastei no nubank", "fatura do itaú", "saldo do nubank pj".
+ */
+export async function getWhatsappCardSummary(userId: string, cardHint: string) {
+  if (!db) return "Banco indisponível no momento.";
+
+  const month = await getCurrentMonthForUser(userId);
+  if (!month) return "Ainda não existe mês atual criado no M Finance.";
+
+  const card = await resolveCardByName(userId, cardHint);
+  if (!card) {
+    const cards = await getCreditCards(userId);
+    const list = cards.map((c) => `${c.name} (${c.cardType === "business" ? "PJ" : "pessoal"})`).join(", ");
+    return `Não encontrei um cartão chamado "${cardHint}". Ativos: ${list}.`;
+  }
+
+  const [invoice] = await Promise.all([
+    getInvoicesByMonth(month.id).then((rows) => rows.find((r) => r.name === card.name)),
+  ]);
+
+  const [expenseRow] = await db
+    .select({ total: sql<number>`coalesce(sum(${creditCardExpenses.amountCents}), 0)::int` })
+    .from(creditCardExpenses)
+    .where(
+      and(
+        eq(creditCardExpenses.userId, userId),
+        eq(creditCardExpenses.cardId, card.id),
+        eq(creditCardExpenses.monthId, month.id),
+      ),
+    );
+
+  const total = Number(expenseRow?.total ?? 0);
+  const label = formatMonthName(month.month, month.year);
+
+  return [
+    `${card.name} (${card.cardType === "business" ? "PJ" : "pessoal"}) — ${label}`,
+    "",
+    `Gastos no mês: ${formatCurrency(total)}`,
+    invoice ? `Fatura: ${formatCurrency(invoice.amountCents)} — vence ${formatDate(invoice.dueDate)} (${invoice.status === "paid" ? "paga" : invoice.status === "overdue" ? "vencida" : "pendente"})` : "Fatura: ainda não gerada",
+  ].join("\n");
+}
+
+/**
+ * Lista apenas contas e faturas vencidas (status overdue) do mês atual.
+ */
+export async function getWhatsappOverdueItems(userId: string) {
+  const month = await getCurrentMonthForUser(userId);
+  if (!month) return "Ainda não existe mês atual criado no M Finance.";
+
+  const [bills, invoices] = await Promise.all([
+    getBillsByMonth(month.id),
+    getInvoicesByMonth(month.id),
+  ]);
+
+  const items = [
+    ...bills
+      .filter((b) => b.status === "overdue")
+      .map((b) => ({ type: "Conta", name: b.name, amountCents: b.amountCents, dueDate: b.dueDate })),
+    ...invoices
+      .filter((i) => i.status === "overdue")
+      .map((i) => ({ type: "Fatura", name: i.name, amountCents: i.amountCents, dueDate: i.dueDate })),
+  ].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+
+  if (items.length === 0) return "Nenhuma conta ou fatura vencida no mês atual. 👍";
+
+  return [
+    "Vencidos:",
+    "",
+    ...items.map((i) => `• ${i.type}: ${i.name} — ${formatCurrency(i.amountCents)} — ${formatDate(i.dueDate)}`),
+    "",
+    `Total vencido: ${formatCurrency(items.reduce((acc, i) => acc + i.amountCents, 0))}`,
+  ].join("\n");
+}
+
+/**
+ * Compara o mês atual com o mês anterior: receitas, contas, faturas e saldo.
+ * Destaca o que mudou de forma significativa.
+ */
+export async function getWhatsappMonthlyComparison(userId: string) {
+  if (!db) return "Banco indisponível no momento.";
+
+  const current = await getCurrentMonthForUser(userId);
+  if (!current) return "Ainda não existe mês atual criado no M Finance.";
+
+  const parts = getCurrentMonthParts();
+  const prevDate = new Date(parts.year, parts.month - 2, 1);
+  const prevMonth = await getMonthByParts(userId, prevDate.getMonth() + 1, prevDate.getFullYear());
+
+  const [currentIncomes, currentBills, currentInvoices] = await Promise.all([
+    getIncomesByMonth(current.id),
+    getBillsByMonth(current.id),
+    getInvoicesByMonth(current.id),
+  ]);
+  const currentSummary = getDashboardSummary({
+    incomes: currentIncomes,
+    bills: currentBills,
+    invoices: currentInvoices,
+  });
+
+  if (!prevMonth) {
+    const label = formatMonthName(current.month, current.year);
+    return [
+      `Comparação — ${label}`,
+      "",
+      "Sem mês anterior criado para comparar.",
+      "",
+      `Receitas: ${formatCurrency(currentSummary.totalIncomeCents)}`,
+      `Contas: ${formatCurrency(currentSummary.totalBillsCents)}`,
+      `Faturas: ${formatCurrency(currentSummary.totalInvoicesCents)}`,
+      `Saldo estimado: ${formatCurrency(currentSummary.estimatedRemainingCents)}`,
+    ].join("\n");
+  }
+
+  const [prevIncomes, prevBills, prevInvoices] = await Promise.all([
+    getIncomesByMonth(prevMonth.id),
+    getBillsByMonth(prevMonth.id),
+    getInvoicesByMonth(prevMonth.id),
+  ]);
+  const prevSummary = getDashboardSummary({
+    incomes: prevIncomes,
+    bills: prevBills,
+    invoices: prevInvoices,
+  });
+
+  const delta = (curr: number, prev: number) => curr - prev;
+  const fmtDelta = (d: number) => (d > 0 ? `+${formatCurrency(d)}` : formatCurrency(d));
+
+  const lines = [
+    `Comparação — ${formatMonthName(current.month, current.year)} vs ${formatMonthName(prevMonth.month, prevMonth.year)}`,
+    "",
+    `Receitas: ${formatCurrency(currentSummary.totalIncomeCents)} (${fmtDelta(delta(currentSummary.totalIncomeCents, prevSummary.totalIncomeCents))})`,
+    `Contas: ${formatCurrency(currentSummary.totalBillsCents)} (${fmtDelta(delta(currentSummary.totalBillsCents, prevSummary.totalBillsCents))})`,
+    `Faturas: ${formatCurrency(currentSummary.totalInvoicesCents)} (${fmtDelta(delta(currentSummary.totalInvoicesCents, prevSummary.totalInvoicesCents))})`,
+    `Pago: ${formatCurrency(currentSummary.totalPaidCents)} (${fmtDelta(delta(currentSummary.totalPaidCents, prevSummary.totalPaidCents))})`,
+    `Saldo estimado: ${formatCurrency(currentSummary.estimatedRemainingCents)} (${fmtDelta(delta(currentSummary.estimatedRemainingCents, prevSummary.estimatedRemainingCents))})`,
+  ];
+
+  // Destaques: o que mudou mais de 20%.
+  const highlights: string[] = [];
+  const pct = (curr: number, prev: number) => (prev === 0 ? 0 : Math.round((curr / prev - 1) * 100));
+  const billsPct = pct(currentSummary.totalBillsCents, prevSummary.totalBillsCents);
+  const invoicesPct = pct(currentSummary.totalInvoicesCents, prevSummary.totalInvoicesCents);
+  if (Math.abs(billsPct) >= 20) {
+    highlights.push(`• Contas ${billsPct > 0 ? "subiram" : "caíram"} ${Math.abs(billsPct)}%`);
+  }
+  if (Math.abs(invoicesPct) >= 20) {
+    highlights.push(`• Faturas ${invoicesPct > 0 ? "subiram" : "caíram"} ${Math.abs(invoicesPct)}%`);
+  }
+  if (highlights.length > 0) {
+    lines.push("", "Destaques:", ...highlights);
+  }
+
+  return lines.join("\n");
 }

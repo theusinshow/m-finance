@@ -78,6 +78,13 @@
       "when": 1783090222787,
       "tag": "0010_sad_vivisector",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783100120529,
+      "tag": "0011_melodic_the_hand",
+      "breakpoints": true
     }
   ]
 }

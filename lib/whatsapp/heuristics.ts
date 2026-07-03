@@ -87,6 +87,53 @@ function todayIso() {
   }).format(new Date());
 }
 
+/**
+ * Resolve uma data explícita/relativa na mensagem do usuário para ISO yyyy-mm-dd
+ * no fuso America/Sao_Paulo. Retorna null quando não há menção de data — nesse
+ * caso o chamador deve usar a data de hoje.
+ *
+ * Aceita: "ontem", "anteontem", "hoje", "dia 15", "no dia 15", "dia 15/07".
+ * Para "dia 15" sem mês, assume o mês atual (ou anterior se o dia ainda não
+ * chegou neste mês — interpretação de lançamento retroativo comum).
+ */
+function parseRelativeDate(normalized: string, today = new Date()): string | null {
+  const todayIsoStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(today);
+
+  if (/\bontem\b/.test(normalized)) {
+    const d = new Date(`${todayIsoStr}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  }
+  if (/\banteontem\b/.test(normalized)) {
+    const d = new Date(`${todayIsoStr}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - 2);
+    return d.toISOString().slice(0, 10);
+  }
+  if (/\bhoje\b/.test(normalized)) {
+    return todayIsoStr;
+  }
+
+  // "dia 15", "no dia 15", "dia 15/07", "dia 15/07/2026"
+  const match = /\bdia\s+(\d{1,2})(?:\/(\d{1,2}))?(?:\/(\d{4}))?\b/.exec(normalized);
+  if (match) {
+    const day = Number(match[1]);
+    const month = match[2] ? Number(match[2]) : today.getMonth() + 1;
+    const year = match[3] ? Number(match[3]) : today.getFullYear();
+    if (!Number.isFinite(day) || day < 1 || day > 31) return null;
+    if (!Number.isFinite(month) || month < 1 || month > 12) return null;
+    const lastDay = new Date(year, month, 0).getDate();
+    const clampedDay = Math.min(day, lastDay);
+    return `${year}-${String(month).padStart(2, "0")}-${String(clampedDay).padStart(2, "0")}`;
+  }
+
+  return null;
+}
+
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -269,7 +316,7 @@ export async function tryHeuristicCardExpense(
     amountCents,
     description: description ?? "compra",
     cardNameHint: cardSegment,
-    purchaseDate: todayIso(),
+    purchaseDate: parseRelativeDate(normalized) ?? todayIso(),
     paymentType: installments ? "installment" : "cash",
     installments,
     confidence: 0.8,
@@ -358,5 +405,113 @@ export async function tryHeuristicBill(
     dueDay: parseDueDay(normalized),
     isRecurring: hasRecurring,
     confidence: 0.8,
+  };
+}
+
+// Marcadores de "marcar conta como paga". Precisa de um verbo de pagamento E de
+// um sinal de que é uma conta existente ("conta de", "a conta", "o X", "X como
+// pago"). "paguei 120 de luz" é create_bill (cria nova), "paguei a conta de
+// luz" é mark_bill_paid (marca a existente como paid).
+const PAID_VERB_TRIGGERS = new Set([
+  "paguei",
+  "pague",
+  "pagar",
+  "pagou",
+  "paga",
+  "paguei",
+  "marquei",
+  "marca",
+  "marcar",
+  "marque",
+  "quitei",
+  "quite",
+  "quitar",
+  "quitou",
+]);
+
+const PAID_EXISTING_MARKERS =
+  /\b(?:conta\s+de|a\s+conta|o\s+pagamento|a\s+fatura|como\s+pago|como\s+quitad[oa])\b/;
+
+/**
+ * Camada determinística para "marcar conta como paga". Reconhece verbos de
+ * pagamento (paguei/marquei/quitei) + referência a conta/fatura existente.
+ *
+ * Casos cobertos:
+ * - "paguei a conta de luz"
+ * - "marquei a fatura do nubank como pago"
+ * - "quitei a conta de internet"
+ *
+ * Não confunde com "paguei 120 de luz" (que tem valor e cria nova despesa):
+ * aqui não há valor nem marcador de despesa avulsa — só a referência a algo
+ * que já existe.
+ */
+export async function tryHeuristicMarkPaid(
+  message: string,
+): Promise<WhatsappIntent | null> {
+  if (!message.trim()) return null;
+  const normalized = normalize(message);
+  const tokens = normalized.split(" ").filter(Boolean);
+  if (tokens.length === 0) return null;
+
+  const hasTrigger = tokens.some((token) => PAID_VERB_TRIGGERS.has(token));
+  if (!hasTrigger) return null;
+
+  // Se há valor monetário, é lançamento de despesa (create_bill) e não marcação.
+  if (parseAmountCents(message)) return null;
+
+  if (!PAID_EXISTING_MARKERS.test(normalized)) return null;
+
+  const description = extractBillDescription(message, normalized);
+  if (!description) return null;
+
+  return {
+    intent: "mark_bill_paid",
+    description,
+    confidence: 0.8,
+  };
+}
+
+const CANCEL_VERB_TRIGGERS = new Set([
+  "cancela",
+  "cancelar",
+  "cancele",
+  "cancelou",
+  "desfaz",
+  "desfazer",
+  "desfaça",
+  "desfez",
+  "anula",
+  "anular",
+  "anule",
+  "reverte",
+  "reverter",
+  "reverta",
+]);
+
+/**
+ * Camada determinística para "cancelar/desfazer última ação". Reconhece verbos
+ * de cancelamento + "último(a)" ou "última ação/lançamento/compra".
+ *
+ * Casos cobertos:
+ * - "cancela a última compra"
+ * - "desfaz o último lançamento"
+ * - "anula a última ação"
+ */
+export async function tryHeuristicCancelLast(
+  message: string,
+): Promise<WhatsappIntent | null> {
+  if (!message.trim()) return null;
+  const normalized = normalize(message);
+  const tokens = normalized.split(" ").filter(Boolean);
+  if (tokens.length === 0) return null;
+
+  const hasTrigger = tokens.some((token) => CANCEL_VERB_TRIGGERS.has(token));
+  if (!hasTrigger) return null;
+
+  if (!/\bultim[oa]\b/.test(normalized)) return null;
+
+  return {
+    intent: "cancel_last_action",
+    confidence: 0.9,
   };
 }

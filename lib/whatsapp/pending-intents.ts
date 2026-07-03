@@ -135,6 +135,15 @@ const pendingBillPayloadSchema = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+const pendingMarkPaidPayloadSchema = z.object({
+  description: z.string().trim().min(1),
+  confidence: z.number().min(0).max(1),
+});
+
+const pendingCancelLastPayloadSchema = z.object({
+  confidence: z.number().min(0).max(1),
+});
+
 async function createCardExpensePendingAction({
   userId,
   phone,
@@ -166,6 +175,75 @@ async function createCardExpensePendingAction({
     actionType: "create_card_expense",
     summary,
     payload,
+  });
+
+  return pendingAction
+    ? summary
+    : "Não consegui criar a ação pendente agora.";
+}
+
+async function createMarkPaidPendingAction({
+  userId,
+  phone,
+  payload,
+}: {
+  userId: string;
+  phone: string;
+  payload: z.infer<typeof pendingMarkPaidPayloadSchema>;
+}) {
+  const parsed = pendingMarkPaidPayloadSchema.safeParse(payload);
+  if (!parsed.success) {
+    return "Não consegui interpretar essa marcação de pagamento. Tente novamente.";
+  }
+  const bill = parsed.data;
+  const summary = [
+    "Confirmar marcação de pagamento?",
+    "",
+    `Conta: ${bill.description}`,
+    "",
+    "Responda sim ou não.",
+  ].join("\n");
+
+  const pendingAction = await createWhatsappPendingAction({
+    userId,
+    phone,
+    actionType: "mark_bill_paid",
+    summary,
+    payload: bill,
+  });
+
+  return pendingAction
+    ? summary
+    : "Não consegui criar a ação pendente agora.";
+}
+
+async function createCancelLastPendingAction({
+  userId,
+  phone,
+  payload,
+}: {
+  userId: string;
+  phone: string;
+  payload: z.infer<typeof pendingCancelLastPayloadSchema>;
+}) {
+  const parsed = pendingCancelLastPayloadSchema.safeParse(payload);
+  if (!parsed.success) {
+    return "Não consegui interpretar esse cancelamento. Tente novamente.";
+  }
+  const summary = [
+    "Confirmar cancelamento?",
+    "",
+    "Vou desfazer o último lançamento confirmado por aqui.",
+    "",
+    "Responda sim ou não.",
+  ].join("\n");
+
+  const pendingAction = await createWhatsappPendingAction({
+    userId,
+    phone,
+    actionType: "cancel_last_action",
+    summary,
+    payload: parsed.data,
   });
 
   return pendingAction
@@ -238,6 +316,35 @@ export async function createPendingActionFromIntent({
         isRecurring: intent.isRecurring,
         confidence: intent.confidence,
       },
+    });
+
+    return {
+      created: true as const,
+      response,
+    };
+  }
+
+  if (intent.intent === "mark_bill_paid") {
+    const response = await createMarkPaidPendingAction({
+      userId,
+      phone,
+      payload: {
+        description: intent.description,
+        confidence: intent.confidence,
+      },
+    });
+
+    return {
+      created: true as const,
+      response,
+    };
+  }
+
+  if (intent.intent === "cancel_last_action") {
+    const response = await createCancelLastPendingAction({
+      userId,
+      phone,
+      payload: { confidence: intent.confidence },
     });
 
     return {

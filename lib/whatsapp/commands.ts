@@ -1,22 +1,30 @@
 import { classifyWhatsappIntent } from "@/lib/ai/whatsapp-intent";
 import { getCreditCards } from "@/lib/cards";
 import {
+  getWhatsappCardSummary,
   getWhatsappDueItems,
+  getWhatsappMonthlyComparison,
   getWhatsappMonthlySummary,
+  getWhatsappOverdueItems,
 } from "@/lib/finance/whatsapp-summary";
 import {
   getActiveWhatsappPendingAction,
   updateWhatsappPendingActionStatus,
 } from "@/lib/whatsapp/audit";
 import { executeWhatsappPendingAction } from "@/lib/whatsapp/action-executor";
-import { tryHeuristicBill, tryHeuristicCardExpense } from "@/lib/whatsapp/heuristics";
+import { tryHeuristicBill, tryHeuristicCancelLast, tryHeuristicCardExpense, tryHeuristicMarkPaid } from "@/lib/whatsapp/heuristics";
 import {
   createPendingActionFromIntent,
   resolvePendingCardExpense,
 } from "@/lib/whatsapp/pending-intents";
 import { WHATSAPP_HELP_MESSAGE } from "@/lib/whatsapp/responses";
 
-const CONFIRMABLE_ACTIONS = new Set(["create_card_expense", "create_bill"]);
+const CONFIRMABLE_ACTIONS = new Set([
+  "create_card_expense",
+  "create_bill",
+  "mark_bill_paid",
+  "cancel_last_action",
+]);
 
 export async function handleWhatsappCommand({
   message,
@@ -79,14 +87,34 @@ export async function handleWhatsappCommand({
     return getWhatsappDueItems(userId);
   }
 
+  if (["vencidas", "vencido", "atrasadas", "atrasado"].includes(normalized)) {
+    return getWhatsappOverdueItems(userId);
+  }
+
+  if (["comparacao", "comparar", "mes passado", "mes anterior"].includes(normalized)) {
+    return getWhatsappMonthlyComparison(userId);
+  }
+
+  // Consultas ricas por cartão: "quanto gastei no nubank", "fatura do itaú",
+  // "saldo do nubank pj". Padrão determinístico — sem IA.
+  const cardQueryMatch = normalized.match(
+    /(?:quanto\s+(?:gastei|gasto)|gastos|fatura|saldo)\s+(?:no|na|do|da|de)\s+([a-z0-9]+(?:\s+[a-z0-9]+){0,2})/,
+  );
+  if (cardQueryMatch) {
+    return getWhatsappCardSummary(userId, cardQueryMatch[1]);
+  }
+
   // Camada barata e determinística primeiro: resolve os padrões mais comuns de
-  // despesa de cartão e de despesa avulsa sem gastar tokens da DeepSeek. Se
-  // nenhuma das duas tiver confiança, cai no classificador de IA. Os cartões
-  // ativos são carregados uma única vez e reaproveitados por todos os passos.
+  // despesa de cartão, despesa avulsa, marcação de pagamento e cancelamento,
+  // sem gastar tokens da DeepSeek. Se nenhuma das duas tiver confiança, cai no
+  // classificador de IA. Os cartões ativos são carregados uma única vez por
+  // mensagem e reaproveitados por todos os passos.
   const cards = await getCreditCards(userId);
   const heuristicIntent =
     (await tryHeuristicCardExpense(message, cards)) ??
-    (await tryHeuristicBill(message, cards));
+    (await tryHeuristicBill(message, cards)) ??
+    (await tryHeuristicMarkPaid(message)) ??
+    (await tryHeuristicCancelLast(message));
   const intent =
     heuristicIntent ?? (await classifyWhatsappIntent(message, { cards }));
   const pendingActionResult = await createPendingActionFromIntent({
