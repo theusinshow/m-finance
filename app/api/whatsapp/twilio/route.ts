@@ -1,4 +1,5 @@
 import { db } from "@/db/client";
+import { env } from "@/lib/env";
 import {
   getWhatsappOwnerUser,
   isAllowedWhatsappSender,
@@ -10,6 +11,7 @@ import {
   createEmptyWhatsappResponse,
   createWhatsappXmlResponse,
 } from "@/lib/whatsapp/responses";
+import { sendConfirmationButtons } from "@/lib/whatsapp/twilio-outbound";
 
 export const runtime = "nodejs";
 
@@ -129,6 +131,29 @@ export async function POST(request: Request) {
     to: payload.From,
     body: response,
   });
+
+  const isConfirmation = response.includes("Responda sim ou nao") || response.includes("Responda sim ou não");
+
+  if (isConfirmation && env.whatsappConfirmTemplateSid) {
+    const buttonResult = await sendConfirmationButtons({
+      to: payload.From ?? "",
+      body: response,
+    });
+
+    if (buttonResult.ok) {
+      await logWhatsappMessage({
+        userId: user.id,
+        direction: "outbound",
+        status: "sent",
+        from: payload.To,
+        to: payload.From,
+        body: response,
+        twilioMessageSid: buttonResult.sid ?? null,
+        metadata: { sentVia: buttonResult.sentVia },
+      });
+      return createEmptyWhatsappResponse();
+    }
+  }
 
   return createWhatsappXmlResponse(response);
 }

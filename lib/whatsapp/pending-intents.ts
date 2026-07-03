@@ -127,6 +127,14 @@ const pendingCardPayloadSchema = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+const pendingBillPayloadSchema = z.object({
+  amountCents: z.number().int().positive(),
+  description: z.string().trim().min(1),
+  dueDay: z.number().int().min(1).max(31).nullable(),
+  isRecurring: z.boolean(),
+  confidence: z.number().min(0).max(1),
+});
+
 async function createCardExpensePendingAction({
   userId,
   phone,
@@ -165,6 +173,49 @@ async function createCardExpensePendingAction({
     : "Não consegui criar a ação pendente agora.";
 }
 
+async function createBillPendingAction({
+  userId,
+  phone,
+  payload,
+}: {
+  userId: string;
+  phone: string;
+  payload: z.infer<typeof pendingBillPayloadSchema>;
+}) {
+  const parsed = pendingBillPayloadSchema.safeParse(payload);
+  if (!parsed.success) {
+    return "Não consegui interpretar essa despesa avulsa. Tente enviar novamente.";
+  }
+
+  const bill = parsed.data;
+  const dueLabel = bill.dueDay ? `dia ${bill.dueDay}` : "fim do mês";
+  const summary = [
+    "Confirmar lançamento?",
+    "",
+    `Despesa avulsa: ${formatCurrency(bill.amountCents)}`,
+    `Descrição: ${bill.description}`,
+    `Vencimento: ${dueLabel}`,
+    bill.isRecurring && bill.dueDay ? `Recorrência: sim (próximos 12 meses)` : null,
+    bill.isRecurring && !bill.dueDay ? "Recorrente: sim (apenas este mês)" : null,
+    "",
+    "Responda sim ou não.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const pendingAction = await createWhatsappPendingAction({
+    userId,
+    phone,
+    actionType: "create_bill",
+    summary,
+    payload: bill,
+  });
+
+  return pendingAction
+    ? summary
+    : "Não consegui criar a ação pendente agora.";
+}
+
 export async function createPendingActionFromIntent({
   intent,
   message,
@@ -176,6 +227,25 @@ export async function createPendingActionFromIntent({
   phone: string;
   userId: string;
 }) {
+  if (intent.intent === "create_bill") {
+    const response = await createBillPendingAction({
+      userId,
+      phone,
+      payload: {
+        amountCents: intent.amountCents,
+        description: intent.description,
+        dueDay: intent.dueDay,
+        isRecurring: intent.isRecurring,
+        confidence: intent.confidence,
+      },
+    });
+
+    return {
+      created: true as const,
+      response,
+    };
+  }
+
   if (intent.intent !== "create_card_expense") {
     return null;
   }

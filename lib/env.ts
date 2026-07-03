@@ -21,6 +21,9 @@ export const env = {
   twilioWhatsappFrom: process.env.TWILIO_WHATSAPP_FROM ?? "",
   whatsappAllowedPhone: process.env.WHATSAPP_ALLOWED_PHONE ?? "",
   whatsappWebhookSecret: process.env.WHATSAPP_WEBHOOK_SECRET ?? "",
+  // Template SID (Twilio Content API) aprovado pela Meta com botões "Sim" e
+  // "Não". Opcional: sem ele, as confirmações seguem como texto via TwiML.
+  whatsappConfirmTemplateSid: process.env.WHATSAPP_CONFIRM_TEMPLATE_SID ?? "",
   // DeepSeek uses an OpenAI-compatible API.
   deepseekApiKey: process.env.DEEPSEEK_API_KEY ?? "",
   deepseekBaseUrl: process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com",

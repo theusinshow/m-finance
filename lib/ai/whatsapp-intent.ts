@@ -17,6 +17,14 @@ const whatsappIntentSchema = z.discriminatedUnion("intent", [
     confidence: z.number().min(0).max(1),
   }),
   z.object({
+    intent: z.literal("create_bill"),
+    amountCents: z.number().int().positive(),
+    description: z.string().trim().min(1),
+    dueDay: z.number().int().min(1).max(31).nullable(),
+    isRecurring: z.boolean(),
+    confidence: z.number().min(0).max(1),
+  }),
+  z.object({
     intent: z.literal("unknown"),
     reason: z.string().trim().min(1),
     confidence: z.number().min(0).max(1),
@@ -24,6 +32,11 @@ const whatsappIntentSchema = z.discriminatedUnion("intent", [
 ]);
 
 export type WhatsappIntent = z.infer<typeof whatsappIntentSchema>;
+
+type IntentCardContext = {
+  name: string;
+  cardType: "personal" | "business";
+};
 
 function todayIso() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -34,18 +47,48 @@ function todayIso() {
   }).format(new Date());
 }
 
-const exampleJson = {
+function formatCardList(cards: IntentCardContext[]) {
+  if (cards.length === 0) return "Nenhum cartão ativo cadastrado.";
+  return cards
+    .map((card) => `${card.name} (${card.cardType === "business" ? "PJ" : "pessoal"})`)
+    .join(", ");
+}
+
+const cardExpenseExample = {
   intent: "create_card_expense",
   amountCents: 3290,
   description: "almoço",
-  cardNameHint: null,
+  cardNameHint: "nubank pessoal",
   purchaseDate: "2026-07-03",
   paymentType: "cash",
   installments: null,
   confidence: 0.92,
 };
 
-export async function classifyWhatsappIntent(message: string): Promise<WhatsappIntent> {
+const installmentExample = {
+  intent: "create_card_expense",
+  amountCents: 60000,
+  description: "amazon",
+  cardNameHint: "itaú",
+  purchaseDate: "2026-07-03",
+  paymentType: "installment",
+  installments: 10,
+  confidence: 0.9,
+};
+
+const billExample = {
+  intent: "create_bill",
+  amountCents: 12000,
+  description: "luz",
+  dueDay: null,
+  isRecurring: false,
+  confidence: 0.85,
+};
+
+export async function classifyWhatsappIntent(
+  message: string,
+  context?: { cards: IntentCardContext[] },
+): Promise<WhatsappIntent> {
   const client = getDeepSeekClient();
 
   if (!client) {
@@ -56,6 +99,8 @@ export async function classifyWhatsappIntent(message: string): Promise<WhatsappI
     };
   }
 
+  const cards = context?.cards ?? [];
+
   const completion = await client.chat.completions.create({
     model: env.deepseekModel,
     messages: [
@@ -65,15 +110,26 @@ export async function classifyWhatsappIntent(message: string): Promise<WhatsappI
           "Você é um extrator de intenção para um app financeiro pessoal chamado M Finance.",
           "Responda somente com JSON válido.",
           "Não execute ações. Apenas classifique a mensagem.",
-          "A data de hoje no fuso America/Sao_Paulo é " + todayIso() + ".",
-          "Por enquanto só reconheça compras/despesas de cartão de crédito.",
-          "Se a mensagem for consulta, saudação, comando, ambígua ou não indicar gasto, retorne intent unknown.",
-          "Valores devem ser convertidos para centavos em BRL.",
-          "Se o cartão for mencionado, preencha cardNameHint preservando qualificadores como pessoal, pj, business, empresa ou final do nome; caso contrário, null.",
-          "Se não houver data explícita, use a data de hoje.",
-          "Se houver parcelamento, use paymentType installment e installments; caso contrário cash e null.",
-          "Exemplo de JSON:",
-          JSON.stringify(exampleJson),
+          `A data de hoje no fuso America/Sao_Paulo é ${todayIso()}.`,
+          `Cartões de crédito ativos do usuário: ${formatCardList(cards)}.`,
+          "",
+          "Regras de classificação:",
+          "- Compra no cartão de crédito (menção a cartão, ou a 'no/na/pelo <cartão>' que casa com um cartão ativo) -> create_card_expense.",
+          "- Despesa fora do cartão (em dinheiro, pix, débito, sem cartão, conta de luz/água/internet, boleto) -> create_bill.",
+          "- Parcelamento ('em 6x', 'parcelado em 10 vezes') -> create_card_expense com paymentType installment e installments.",
+          "- 'todo mês', 'assinatura', 'recorrente' -> create_bill com isRecurring true.",
+          "- Consulta, saudação, comando, ambígua ou sem gasto -> unknown.",
+          "",
+          "Conversões:",
+          "- Valores em centavos BRL (32,90 -> 3290).",
+          "- cardNameHint preserva qualificadores (pessoal, pj, business) e a marca; null se não mencionado.",
+          "- Sem data explícita -> purchaseDate = hoje.",
+          "- Sem dia de vencimento -> dueDay null.",
+          "",
+          "Exemplos de JSON:",
+          JSON.stringify(cardExpenseExample),
+          JSON.stringify(installmentExample),
+          JSON.stringify(billExample),
         ].join("\n"),
       },
       {
