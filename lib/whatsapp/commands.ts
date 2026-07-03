@@ -7,6 +7,7 @@ import {
   getActiveWhatsappPendingAction,
   updateWhatsappPendingActionStatus,
 } from "@/lib/whatsapp/audit";
+import { executeWhatsappPendingAction } from "@/lib/whatsapp/action-executor";
 import { createPendingActionFromIntent } from "@/lib/whatsapp/pending-intents";
 import { WHATSAPP_HELP_MESSAGE } from "@/lib/whatsapp/responses";
 
@@ -32,12 +33,7 @@ export async function handleWhatsappCommand({
       return "Não encontrei nenhuma ação pendente para confirmar.";
     }
 
-    await updateWhatsappPendingActionStatus(pendingAction.id, "confirmed");
-    return [
-      "Confirmação registrada.",
-      "",
-      "A execução da ação entra na próxima etapa da integração.",
-    ].join("\n");
+    return executeWhatsappPendingAction(pendingAction);
   }
 
   if (["nao", "não", "n", "cancelar", "cancela"].includes(normalized)) {
