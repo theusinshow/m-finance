@@ -1,7 +1,8 @@
+import { z } from "zod";
 import { getCreditCards } from "@/lib/cards";
 import { formatCurrency } from "@/lib/formatters/currency";
 import type { WhatsappIntent } from "@/lib/ai/whatsapp-intent";
-import { createWhatsappPendingAction } from "@/lib/whatsapp/audit";
+import { createWhatsappPendingAction, updateWhatsappPendingActionStatus } from "@/lib/whatsapp/audit";
 
 function normalize(value: string) {
   return value
@@ -88,6 +89,82 @@ async function resolveCard(userId: string, cardNameHint: string | null, original
   };
 }
 
+export async function resolvePendingCardExpense({
+  pendingAction,
+  message,
+}: {
+  pendingAction: { id: string; userId: string; phone: string; payload: unknown };
+  message: string;
+}) {
+  const basePayload = pendingCardPayloadSchema.safeParse(pendingAction.payload);
+  if (!basePayload.success) {
+    await updateWhatsappPendingActionStatus(pendingAction.id, "cancelled");
+    return "A pendência estava inválida. Envie o lançamento novamente.";
+  }
+
+  const { card, reason } = await resolveCard(pendingAction.userId, message, message);
+  if (!card) return reason ?? "Não consegui identificar o cartão.";
+
+  await updateWhatsappPendingActionStatus(pendingAction.id, "cancelled");
+
+  return createCardExpensePendingAction({
+    userId: pendingAction.userId,
+    phone: pendingAction.phone,
+    payload: {
+      ...basePayload.data,
+      cardId: card.id,
+      cardName: card.name,
+    },
+  });
+}
+
+const pendingCardPayloadSchema = z.object({
+  amountCents: z.number().int().positive(),
+  description: z.string().trim().min(1),
+  purchaseDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
+  paymentType: z.enum(["cash", "installment"]),
+  installments: z.number().int().min(2).max(60).nullable(),
+  confidence: z.number().min(0).max(1),
+});
+
+async function createCardExpensePendingAction({
+  userId,
+  phone,
+  payload,
+}: {
+  userId: string;
+  phone: string;
+  payload: z.infer<typeof pendingCardPayloadSchema> & { cardId: string; cardName: string };
+}) {
+  const summary = [
+    "Confirmar lançamento?",
+    "",
+    `Compra no cartão: ${formatCurrency(payload.amountCents)}`,
+    `Descrição: ${payload.description}`,
+    `Cartão: ${payload.cardName}`,
+    `Data: ${formatDate(payload.purchaseDate)}`,
+    payload.paymentType === "installment" && payload.installments
+      ? `Parcelamento: ${payload.installments}x`
+      : null,
+    "",
+    "Responda sim ou não.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const pendingAction = await createWhatsappPendingAction({
+    userId,
+    phone,
+    actionType: "create_card_expense",
+    summary,
+    payload,
+  });
+
+  return pendingAction
+    ? summary
+    : "Não consegui criar a ação pendente agora.";
+}
+
 export async function createPendingActionFromIntent({
   intent,
   message,
@@ -106,33 +183,30 @@ export async function createPendingActionFromIntent({
   const { card, reason } = await resolveCard(userId, intent.cardNameHint, message);
 
   if (!card) {
+    await createWhatsappPendingAction({
+      userId,
+      phone,
+      actionType: "resolve_card_expense",
+      summary: "Aguardando seleção de cartão para lançamento.",
+      payload: {
+        amountCents: intent.amountCents,
+        description: intent.description,
+        purchaseDate: intent.purchaseDate,
+        paymentType: intent.paymentType,
+        installments: intent.installments,
+        confidence: intent.confidence,
+      },
+    });
+
     return {
-      created: false as const,
-      response: reason ?? "Não consegui identificar o cartão para esse lançamento.",
+      created: true as const,
+      response: `${reason ?? "Não consegui identificar o cartão."}\n\nResponda com o nome do cartão para continuar.`,
     };
   }
 
-  const summary = [
-    "Confirmar lançamento?",
-    "",
-    `Compra no cartão: ${formatCurrency(intent.amountCents)}`,
-    `Descrição: ${intent.description}`,
-    `Cartão: ${card.name}`,
-    `Data: ${formatDate(intent.purchaseDate)}`,
-    intent.paymentType === "installment" && intent.installments
-      ? `Parcelamento: ${intent.installments}x`
-      : null,
-    "",
-    "Responda sim ou não.",
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  const pendingAction = await createWhatsappPendingAction({
+  const response = await createCardExpensePendingAction({
     userId,
     phone,
-    actionType: "create_card_expense",
-    summary,
     payload: {
       amountCents: intent.amountCents,
       description: intent.description,
@@ -145,15 +219,8 @@ export async function createPendingActionFromIntent({
     },
   });
 
-  if (!pendingAction) {
-    return {
-      created: false as const,
-      response: "Não consegui criar a ação pendente agora.",
-    };
-  }
-
   return {
     created: true as const,
-    response: summary,
+    response,
   };
 }

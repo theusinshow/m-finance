@@ -8,7 +8,10 @@ import {
   updateWhatsappPendingActionStatus,
 } from "@/lib/whatsapp/audit";
 import { executeWhatsappPendingAction } from "@/lib/whatsapp/action-executor";
-import { createPendingActionFromIntent } from "@/lib/whatsapp/pending-intents";
+import {
+  createPendingActionFromIntent,
+  resolvePendingCardExpense,
+} from "@/lib/whatsapp/pending-intents";
 import { WHATSAPP_HELP_MESSAGE } from "@/lib/whatsapp/responses";
 
 export async function handleWhatsappCommand({
@@ -33,6 +36,10 @@ export async function handleWhatsappCommand({
       return "Não encontrei nenhuma ação pendente para confirmar.";
     }
 
+    if (pendingAction.actionType !== "create_card_expense") {
+      return "Ainda preciso que você responda com o cartão antes de confirmar.";
+    }
+
     return executeWhatsappPendingAction(pendingAction);
   }
 
@@ -45,6 +52,11 @@ export async function handleWhatsappCommand({
 
     await updateWhatsappPendingActionStatus(pendingAction.id, "cancelled");
     return "Ação pendente cancelada.";
+  }
+
+  const pendingAction = await getActiveWhatsappPendingAction(userId, phone);
+  if (pendingAction?.actionType === "resolve_card_expense") {
+    return resolvePendingCardExpense({ pendingAction, message });
   }
 
   if (!normalized || normalized === "ajuda" || normalized === "help") {

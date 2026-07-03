@@ -20,7 +20,7 @@ const cardExpensePayloadSchema = z.object({
 type PendingAction = {
   id: string;
   userId: string;
-  actionType: "create_card_expense" | "create_bill";
+  actionType: string;
   payload: unknown;
 };
 

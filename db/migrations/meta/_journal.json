@@ -71,6 +71,13 @@
       "when": 1783087258914,
       "tag": "0009_easy_daredevil",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783090222787,
+      "tag": "0010_sad_vivisector",
+      "breakpoints": true
     }
   ]
 }

@@ -53,6 +53,7 @@ export const whatsappMessageStatus = pgEnum("whatsapp_message_status", [
 export const whatsappPendingActionType = pgEnum("whatsapp_pending_action_type", [
   "create_card_expense",
   "create_bill",
+  "resolve_card_expense",
 ]);
 export const whatsappPendingActionStatus = pgEnum("whatsapp_pending_action_status", [
   "pending",
