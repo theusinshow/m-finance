@@ -50,6 +50,20 @@
       "when": 1782499790129,
       "tag": "0006_ambiguous_shinko_yamashiro",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783083166408,
+      "tag": "0007_needy_patriot",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1783083277851,
+      "tag": "0008_bizarre_crusher_hogan",
+      "breakpoints": true
     }
   ]
 }

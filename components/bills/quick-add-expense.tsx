@@ -1,10 +1,14 @@
 "use client";
 
-import { Repeat } from "lucide-react";
+import { useState } from "react";
 import { createBill } from "@/app/actions/bills";
 import { CategoryChips } from "@/components/bills/category-chips";
 import { FormSubmitButton } from "@/components/form-submit-button";
-import { ValidatedForm, ValidatedInput } from "@/components/ui/validated-form";
+import {
+  ValidatedForm,
+  ValidatedInput,
+  ValidatedSelect,
+} from "@/components/ui/validated-form";
 import { formatCurrency } from "@/lib/formatters/currency";
 
 type Category = { id: string; name: string };
@@ -20,6 +24,8 @@ export function QuickAddExpense({
   pendingCount: number;
   paidCount: number;
 }) {
+  const [scheduleType, setScheduleType] = useState<"once" | "fixed" | "ongoing">("once");
+
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
@@ -95,14 +101,45 @@ export function QuickAddExpense({
         ) : null}
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          {/* Recurring as a pill toggle, not a stray checkbox. */}
-          <label className="group focus-within:[&>span]:ring-2 focus-within:[&>span]:ring-accent/40">
-            <input className="peer sr-only" name="isRecurring" type="checkbox" />
-            <span className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-border-subtle bg-background-elevated px-4 text-sm font-medium text-text-muted transition duration-150 hover:border-border-default peer-checked:border-accent-border peer-checked:bg-accent-soft peer-checked:text-accent">
-              <Repeat size={15} aria-hidden="true" />
-              Recorrente
-            </span>
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-text-muted" htmlFor="quick-schedule">
+              Repetição
+            </label>
+            <ValidatedSelect
+              className="focus-ring min-h-11 rounded-lg border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary"
+              id="quick-schedule"
+              name="scheduleType"
+              onChange={(event) =>
+                setScheduleType(event.target.value as "once" | "fixed" | "ongoing")
+              }
+              value={scheduleType}
+            >
+              <option value="once">Somente este mês</option>
+              <option value="fixed">Por alguns meses</option>
+              <option value="ongoing">Recorrente, sem fim</option>
+            </ValidatedSelect>
+          </div>
+
+          {scheduleType === "fixed" ? (
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-text-muted" htmlFor="quick-repeat-months">
+                Durante
+              </label>
+              <ValidatedInput
+                aria-label="Quantidade de meses"
+                className="focus-ring num h-11 w-20 rounded-lg border border-border-subtle bg-background-elevated px-3 text-center text-sm text-text-primary"
+                defaultValue={2}
+                id="quick-repeat-months"
+                inputMode="numeric"
+                max={60}
+                min={2}
+                name="repeatMonths"
+                required
+                type="number"
+              />
+              <span className="text-sm text-text-muted">meses</span>
+            </div>
+          ) : null}
 
           <div className="flex items-center gap-2">
             <label className="text-sm text-text-muted" htmlFor="quick-due-day">
@@ -127,7 +164,7 @@ export function QuickAddExpense({
         </div>
 
         <p className="mt-3 text-xs leading-5 text-text-muted">
-          Sem dia informado, a despesa vence no fim do mês.
+          Sem dia informado, a despesa vence no fim do mês. Séries começam no mês selecionado.
         </p>
       </ValidatedForm>
     </div>

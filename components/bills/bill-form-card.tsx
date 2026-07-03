@@ -1,4 +1,10 @@
-import { deleteBill, markBillAsPaid, markBillAsPending, updateBill } from "@/app/actions/bills";
+import {
+  deleteBill,
+  deleteBillSeries,
+  markBillAsPaid,
+  markBillAsPending,
+  updateBill,
+} from "@/app/actions/bills";
 import { QuickAddExpense } from "@/components/bills/quick-add-expense";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
@@ -25,6 +31,9 @@ type Bill = {
   amountCents: number;
   dueDate: string;
   isRecurring: boolean;
+  seriesId: string | null;
+  seriesNumber: number | null;
+  seriesTotal: number | null;
   status: "pending" | "paid" | "overdue";
   categoryName: string | null;
 };
@@ -104,7 +113,11 @@ function BillRow({
           </div>
           <p className="mt-1 text-sm text-text-muted">
             {bill.categoryName ?? "Sem categoria"} · vence {formatShortDate(bill.dueDate)}
-            {bill.isRecurring ? " · recorrente" : ""}
+            {bill.seriesNumber && bill.seriesTotal
+              ? ` · mês ${bill.seriesNumber}/${bill.seriesTotal}`
+              : bill.isRecurring
+                ? " · recorrente"
+                : ""}
           </p>
         </div>
         <div className="flex items-center justify-between gap-3 sm:justify-end">
@@ -159,16 +172,39 @@ function BillRow({
               </option>
             ))}
           </ValidatedSelect>
-          <label className="flex items-center gap-2 text-sm text-text-secondary">
-            <input className="h-4 w-4 accent-accent" defaultChecked={bill.isRecurring} name="isRecurring" type="checkbox" />
-            Despesa recorrente
-          </label>
+          {!bill.seriesId ? (
+            <label className="flex items-center gap-2 text-sm text-text-secondary">
+              <input
+                className="h-4 w-4 accent-accent"
+                defaultChecked={bill.isRecurring}
+                name="isRecurring"
+                type="checkbox"
+              />
+              Despesa recorrente
+            </label>
+          ) : (
+            <p className="text-xs leading-5 text-text-muted">
+              Esta ocorrência pertence a uma série. A edição altera somente este mês.
+            </p>
+          )}
           <FormSubmitButton pendingLabel="Salvando...">Salvar despesa</FormSubmitButton>
         </ValidatedForm>
-        <ToastForm action={deleteBill} successMessage="Despesa excluída." className="mt-2">
-          <input name="billId" type="hidden" value={bill.id} />
-          <ConfirmDeleteButton confirmMessage="Excluir esta despesa?">Excluir despesa</ConfirmDeleteButton>
-        </ToastForm>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <ToastForm action={deleteBill} successMessage="Despesa excluída.">
+            <input name="billId" type="hidden" value={bill.id} />
+            <ConfirmDeleteButton confirmMessage="Excluir apenas esta despesa?">
+              Excluir este mês
+            </ConfirmDeleteButton>
+          </ToastForm>
+          {bill.seriesId ? (
+            <ToastForm action={deleteBillSeries} successMessage="Série excluída.">
+              <input name="seriesId" type="hidden" value={bill.seriesId} />
+              <ConfirmDeleteButton confirmMessage="Excluir todas as despesas desta série?">
+                Excluir série
+              </ConfirmDeleteButton>
+            </ToastForm>
+          ) : null}
+        </div>
       </EditDisclosure>
     </div>
   );

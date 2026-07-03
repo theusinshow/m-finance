@@ -142,12 +142,26 @@ export const bills = pgTable(
     amountCents: integer("amount_cents").notNull(),
     dueDate: date("due_date").notNull(),
     isRecurring: boolean("is_recurring").notNull().default(false),
+    seriesId: uuid("series_id"),
+    seriesNumber: integer("series_number"),
+    seriesTotal: integer("series_total"),
     status: billStatus("status").notNull().default("pending"),
     notes: text("notes"),
     paidAt: timestamp("paid_at", { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [check("bills_amount_positive", sql`${table.amountCents} > 0`)],
+  (table) => [
+    unique("bills_user_series_number_unique").on(
+      table.userId,
+      table.seriesId,
+      table.seriesNumber,
+    ),
+    check("bills_amount_positive", sql`${table.amountCents} > 0`),
+    check(
+      "bills_series_valid",
+      sql`(${table.seriesId} is null and ${table.seriesNumber} is null and ${table.seriesTotal} is null) or (${table.seriesId} is not null and ${table.seriesNumber} is not null and ${table.seriesTotal} is not null and ${table.seriesNumber} between 1 and ${table.seriesTotal} and ${table.seriesTotal} >= 2)`,
+    ),
+  ],
 );
 
 export const creditCards = pgTable(
@@ -203,6 +217,9 @@ export const creditCardExpenses = pgTable(
     // re-sync upserts instead of duplicating.
     source: expenseSource("source").notNull().default("manual"),
     externalId: text("external_id"),
+    installmentId: uuid("installment_id"),
+    installmentNumber: integer("installment_number"),
+    installmentTotal: integer("installment_total"),
     ...timestamps,
   },
   (table) => [
@@ -210,6 +227,15 @@ export const creditCardExpenses = pgTable(
     // NULLs are distinct in Postgres, so manual rows (externalId = null) never
     // collide; only synced rows are deduped per user by provider id.
     unique("credit_card_expenses_user_external_unique").on(table.userId, table.externalId),
+    unique("credit_card_expenses_user_installment_number_unique").on(
+      table.userId,
+      table.installmentId,
+      table.installmentNumber,
+    ),
+    check(
+      "credit_card_expenses_installment_valid",
+      sql`(${table.installmentId} is null and ${table.installmentNumber} is null and ${table.installmentTotal} is null) or (${table.installmentId} is not null and ${table.installmentNumber} is not null and ${table.installmentTotal} is not null and ${table.installmentNumber} between 1 and ${table.installmentTotal} and ${table.installmentTotal} >= 2)`,
+    ),
   ],
 );
 
