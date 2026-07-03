@@ -15,6 +15,12 @@ export const env = {
   vapidSubject: process.env.VAPID_SUBJECT ?? "mailto:admin@example.com",
   // Secret Vercel Cron sends so only it can trigger the daily reminder run.
   cronSecret: process.env.CRON_SECRET ?? "",
+  // WhatsApp via Twilio. The webhook is intentionally private to one phone.
+  twilioAccountSid: process.env.TWILIO_ACCOUNT_SID ?? "",
+  twilioAuthToken: process.env.TWILIO_AUTH_TOKEN ?? "",
+  twilioWhatsappFrom: process.env.TWILIO_WHATSAPP_FROM ?? "",
+  whatsappAllowedPhone: process.env.WHATSAPP_ALLOWED_PHONE ?? "",
+  whatsappWebhookSecret: process.env.WHATSAPP_WEBHOOK_SECRET ?? "",
 };
 
 export function isSupabaseConfigured() {
@@ -36,4 +42,8 @@ export function isPluggyConfigured() {
 
 export function isPushConfigured() {
   return Boolean(env.vapidPublicKey && env.vapidPrivateKey);
+}
+
+export function isTwilioConfigured() {
+  return Boolean(env.twilioAccountSid && env.twilioAuthToken && env.twilioWhatsappFrom);
 }
