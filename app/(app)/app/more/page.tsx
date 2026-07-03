@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Calculator, ChevronRight, History, RefreshCw, Settings, Target } from "lucide-react";
+import { Calculator, ChevronRight, History, PiggyBank, RefreshCw, Settings, Target } from "lucide-react";
 import { PageHeading } from "@/components/page-heading";
 
 const links = [
   { href: "/app/subscriptions", label: "Assinaturas", description: "Testes grátis e cobranças recorrentes", icon: RefreshCw },
   { href: "/app/simulator", label: "Simulador", description: "Cabe uma compra sem bagunçar o mês?", icon: Calculator },
+  { href: "/app/budgets", label: "Orçamento", description: "Tetos de gasto por categoria e cartão", icon: PiggyBank },
   { href: "/app/goals", label: "Metas", description: "Objetivos e quanto já guardou", icon: Target },
   { href: "/app/history", label: "Histórico", description: "Meses anteriores e snapshots", icon: History },
   { href: "/app/settings", label: "Configurações", description: "Alertas, notificações, categorias e dados", icon: Settings },

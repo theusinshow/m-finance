@@ -8,6 +8,7 @@ import {
   CreditCard,
   History,
   LayoutDashboard,
+  PiggyBank,
   ReceiptText,
   RefreshCw,
   Settings,
@@ -31,6 +32,7 @@ const navGroups = [
     label: "Planejamento",
     items: [
       { href: "/app/simulator", label: "Simulador", icon: Calculator },
+      { href: "/app/budgets", label: "Orçamento", icon: PiggyBank },
       { href: "/app/goals", label: "Metas", icon: Target },
       { href: "/app/history", label: "Histórico", icon: History },
     ],

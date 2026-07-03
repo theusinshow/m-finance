@@ -31,6 +31,7 @@ export const paymentType = pgEnum("payment_type", ["cash", "installment"]);
 export const riskLevel = pgEnum("risk_level", ["safe", "controlled", "tight", "critical"]);
 export const goalPriority = pgEnum("goal_priority", ["low", "medium", "high"]);
 export const goalStatus = pgEnum("goal_status", ["active", "paused", "completed", "archived"]);
+export const budgetType = pgEnum("budget_type", ["total", "category", "card"]);
 export const expenseSource = pgEnum("expense_source", ["manual", "openfinance"]);
 export const pluggyItemStatus = pgEnum("pluggy_item_status", [
   "pending",
@@ -477,6 +478,30 @@ export const settings = pgTable("settings", {
   currency: text("currency").notNull().default("BRL"),
   ...timestamps,
 });
+
+export const budgets = pgTable(
+  "budgets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    monthId: uuid("month_id").notNull().references(() => months.id, { onDelete: "cascade" }),
+    budgetType: budgetType("budget_type").notNull(),
+    categoryId: uuid("category_id").references(() => billCategories.id, { onDelete: "cascade" }),
+    cardId: uuid("card_id").references(() => creditCards.id, { onDelete: "cascade" }),
+    limitCents: integer("limit_cents").notNull(),
+    ...timestamps,
+  },
+  (table) => [
+    check("budgets_limit_positive", sql`${table.limitCents} > 0`),
+    unique("budgets_user_month_type_ref_unique").on(
+      table.userId,
+      table.monthId,
+      table.budgetType,
+      table.categoryId,
+      table.cardId,
+    ),
+  ],
+);
 
 export type BillStatus = (typeof billStatus.enumValues)[number];
 export type InvoiceStatus = (typeof invoiceStatus.enumValues)[number];
