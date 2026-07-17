@@ -1,7 +1,7 @@
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EmptyState } from "@/components/empty-state";
 import { BudgetCard } from "@/components/budgets/budget-card";
-import { BudgetFormCard } from "@/components/budgets/budget-form-card";
+import { BudgetFormDrawer } from "@/components/budgets/budget-form-drawer";
 import { PageHeading } from "@/components/page-heading";
 import { requireUser } from "@/lib/auth/guard";
 import { getBillCategories } from "@/lib/bills";
@@ -31,14 +31,13 @@ export default async function BudgetsPage() {
   ]);
 
   if (!month) {
-    return (
+      return (
       <div className="space-y-6">
         <PageHeading eyebrow="Orçamento" title="Quanto posso gastar?" />
         <EmptyState
           title="Nenhum mês ativo"
           description="Crie o mês atual no dashboard antes de definir orçamentos."
         />
-        <BudgetFormCard categories={categories} cards={cards} />
       </div>
     );
   }
@@ -51,7 +50,9 @@ export default async function BudgetsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeading eyebrow="Orçamento" title="Quanto posso gastar?" />
+      <PageHeading eyebrow="Orçamento" title="Quanto posso gastar?">
+        <BudgetFormDrawer categories={categories} cards={cards} />
+      </PageHeading>
 
       {budgetList.length > 0 ? (
         <DashboardCard title="Resumo dos orçamentos">
@@ -76,7 +77,7 @@ export default async function BudgetsPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">
                 Alertas
               </p>
-              <p className="num mt-1.5 text-2xl font-semibold text-status-danger">
+              <p className="num mt-1.5 text-2xl font-semibold text-status-negative">
                 {overBudgetCount + warningCount}
               </p>
               <p className="num mt-1 text-xs text-text-muted">
@@ -89,12 +90,10 @@ export default async function BudgetsPage() {
         </DashboardCard>
       ) : null}
 
-      <BudgetFormCard categories={categories} cards={cards} />
-
       {budgetList.length === 0 ? (
         <EmptyState
           title="Nenhum orçamento ainda"
-          description="Defina um teto de gasto acima para acompanhar quanto ainda pode gastar no mês."
+          description="Defina um teto de gasto para acompanhar quanto ainda pode gastar no mês."
         />
       ) : (
         <div className="space-y-4">

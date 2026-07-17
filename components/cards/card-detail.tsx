@@ -2,12 +2,13 @@ import {
   deleteCardExpense,
   deleteCardExpenseSeries,
 } from "@/app/actions/card-expenses";
-import { markInvoiceAsPaid, markInvoiceAsPending } from "@/app/actions/invoices";
+import { markInvoiceAsPending } from "@/app/actions/invoices";
 import { CardBrandMark } from "@/components/cards/card-brand-mark";
 import { CardExpenseForm } from "@/components/cards/card-expense-form";
 import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { MarkPaidButton } from "@/components/payable/mark-paid-button";
 import { InlineEmpty } from "@/components/ui/inline-empty";
 import { StatusBadge } from "@/components/status-badge";
 import { ToastForm } from "@/components/toast-form";
@@ -82,12 +83,9 @@ export function CardDetail({
         {invoice ? (
           <div className="mt-5">
             {invoice.status !== "paid" ? (
-              <ToastForm action={markInvoiceAsPaid} successMessage="Fatura marcada como paga.">
-                <input name="invoiceId" type="hidden" value={invoice.id} />
-                <FormSubmitButton pendingLabel="Marcando..." variant="success">
-                  Marcar fatura como paga
-                </FormSubmitButton>
-              </ToastForm>
+              <MarkPaidButton payableId={invoice.id} payableType="invoice" variant="success">
+                Marcar fatura como paga
+              </MarkPaidButton>
             ) : (
               <ToastForm action={markInvoiceAsPending} successMessage="Fatura reaberta.">
                 <input name="invoiceId" type="hidden" value={invoice.id} />

@@ -10,14 +10,13 @@ import { centsToInput } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { Budget } from "@/lib/budgets";
 
-const editClass =
-  "focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary";
+const editClass = "field-input";
 
 export function BudgetCard({ budget }: { budget: Budget }) {
   const barColor = budget.isOverBudget
-    ? "bg-status-danger"
+    ? "bg-status-negative"
     : budget.isWarning
-      ? "bg-status-warning"
+      ? "bg-status-fair"
       : "bg-accent";
 
   return (
@@ -36,7 +35,7 @@ export function BudgetCard({ budget }: { budget: Budget }) {
         <p
           className={cn(
             "num text-sm font-semibold",
-            budget.isOverBudget ? "text-status-danger" : "text-text-secondary",
+            budget.isOverBudget ? "text-status-negative" : "text-text-secondary",
           )}
         >
           {budget.percentage}%
@@ -56,7 +55,7 @@ export function BudgetCard({ budget }: { budget: Budget }) {
           <span className="text-text-muted"> / {formatCurrency(budget.limitCents)}</span>
         </p>
         {budget.isOverBudget ? (
-          <p className="num text-status-danger">
+          <p className="num text-status-negative">
             estourou {formatCurrency(Math.abs(budget.remainingCents))}
           </p>
         ) : budget.remainingCents > 0 ? (

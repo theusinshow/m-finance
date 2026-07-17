@@ -1,7 +1,6 @@
 import {
   deleteBill,
   deleteBillSeries,
-  markBillAsPaid,
   markBillAsPending,
   updateBill,
 } from "@/app/actions/bills";
@@ -10,6 +9,7 @@ import { ConfirmDeleteButton } from "@/components/confirm-delete-button";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { EditDisclosure } from "@/components/ui/edit-disclosure";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { MarkPaidButton } from "@/components/payable/mark-paid-button";
 import { ToastForm } from "@/components/toast-form";
 import { ValidatedForm, ValidatedInput, ValidatedSelect } from "@/components/ui/validated-form";
 import { InlineEmpty } from "@/components/ui/inline-empty";
@@ -38,8 +38,7 @@ type Bill = {
   categoryName: string | null;
 };
 
-const editInputClass =
-  "focus-ring min-h-11 rounded-md border border-border-subtle bg-background-card px-3 text-sm text-text-primary";
+const editInputClass = "field-input";
 
 export function BillFormCard({
   bills,
@@ -130,12 +129,9 @@ function BillRow({
               </FormSubmitButton>
             </ToastForm>
           ) : (
-            <ToastForm action={markBillAsPaid} successMessage="Conta marcada como paga.">
-              <input name="billId" type="hidden" value={bill.id} />
-              <FormSubmitButton pendingLabel="Marcando..." variant="success">
-                Pago
-              </FormSubmitButton>
-            </ToastForm>
+            <MarkPaidButton payableId={bill.id} payableType="bill" variant="success">
+              Pago
+            </MarkPaidButton>
           )}
         </div>
       </div>

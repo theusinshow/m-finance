@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { jetbrainsMono, panchang, satoshi } from "@/app/fonts/fonts";
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import "@/styles/globals.css";
 
@@ -29,7 +30,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" data-scroll-behavior="smooth">
+    <html
+      lang="pt-BR"
+      data-scroll-behavior="smooth"
+      className={`${satoshi.variable} ${panchang.variable} ${jetbrainsMono.variable}`}
+    >
       <body>
         {children}
         <ServiceWorkerRegister />

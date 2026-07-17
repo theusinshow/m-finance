@@ -106,7 +106,7 @@ export function QuickAddExpense({
               Repetição
             </label>
             <ValidatedSelect
-              className="focus-ring min-h-11 rounded-lg border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary"
+              className="field-input"
               id="quick-schedule"
               name="scheduleType"
               onChange={(event) =>

@@ -60,7 +60,7 @@ export default async function SettingsPage() {
                 Avisar com quantos dias de antecedência
               </label>
               <ValidatedInput
-                className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary"
+                className="field-input"
                 defaultValue={alertDaysBefore}
                 id="alert-days"
                 inputMode="numeric"
@@ -91,7 +91,7 @@ export default async function SettingsPage() {
                 Nova categoria
               </label>
               <ValidatedInput
-                className="focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary placeholder:text-text-muted"
+                className="field-input"
                 id="category-name"
                 name="name"
                 placeholder="Pets"

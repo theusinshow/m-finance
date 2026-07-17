@@ -9,8 +9,7 @@ import {
   ValidatedSelect,
 } from "@/components/ui/validated-form";
 
-const fieldClass =
-  "focus-ring min-h-11 w-full rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary placeholder:text-text-muted";
+const fieldClass = "field-input";
 
 export function CardExpenseForm({ cardId }: { cardId: string }) {
   const [paymentType, setPaymentType] = useState<"cash" | "installment">("cash");

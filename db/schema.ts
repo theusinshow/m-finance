@@ -32,6 +32,7 @@ export const riskLevel = pgEnum("risk_level", ["safe", "controlled", "tight", "c
 export const goalPriority = pgEnum("goal_priority", ["low", "medium", "high"]);
 export const goalStatus = pgEnum("goal_status", ["active", "paused", "completed", "archived"]);
 export const budgetType = pgEnum("budget_type", ["total", "category", "card"]);
+export type BudgetType = (typeof budgetType.enumValues)[number];
 export const expenseSource = pgEnum("expense_source", ["manual", "openfinance"]);
 export const pluggyItemStatus = pgEnum("pluggy_item_status", [
   "pending",

@@ -115,7 +115,7 @@ export function ConnectBank({ cards }: { cards: CardOption[] }) {
                 {account.name}
               </span>
               <select
-                className="focus-ring min-h-11 rounded-md border border-border-subtle bg-background-elevated px-3 text-sm text-text-primary"
+                className="field-input"
                 onChange={(e) => setChoice((c) => ({ ...c, [account.id]: e.target.value }))}
                 value={choice[account.id] ?? ""}
               >

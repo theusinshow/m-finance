@@ -1,6 +1,6 @@
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { bills, budgets, creditCardExpenses, creditCardInvoices } from "@/db/schema";
+import { billCategories, bills, budgets, creditCardExpenses, creditCardInvoices } from "@/db/schema";
 import type { BudgetType } from "@/db/schema";
 
 export type Budget = {
@@ -114,10 +114,11 @@ async function getBudgetLabel(
 ): Promise<string> {
   if (type === "total") return "Gasto total do mês";
   if (type === "category" && categoryId) {
+    if (!db) return "Categoria";
     const [row] = await db
-      .select({ name: bills.name })
-      .from(bills)
-      .where(and(eq(bills.userId, userId), eq(bills.categoryId, categoryId)))
+      .select({ name: billCategories.name })
+      .from(billCategories)
+      .where(and(eq(billCategories.userId, userId), eq(billCategories.id, categoryId)))
       .limit(1);
     return row?.name ?? "Categoria";
   }

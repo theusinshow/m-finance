@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Check, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { setActiveMonth } from "@/app/actions/active-month";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,27 @@ export function MonthSwitcher({
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // Acessibilidade: Escape fecha e devolve o foco ao gatilho; ao abrir,
+  // o foco vai para a opção selecionada.
+  useEffect(() => {
+    if (!open) return;
+
+    const selected = listRef.current?.querySelector<HTMLElement>('[aria-selected="true"]');
+    (selected ?? listRef.current?.querySelector<HTMLElement>("button"))?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
 
   const activeIndex = Math.max(
     0,
@@ -50,6 +71,7 @@ export function MonthSwitcher({
           aria-haspopup="listbox"
           className="focus-ring flex min-h-9 items-center gap-2 rounded-md border border-border-subtle px-3 text-left transition duration-150 hover:border-border-default"
           onClick={() => setOpen((value) => !value)}
+          ref={triggerRef}
           type="button"
         >
           <span>
@@ -77,6 +99,7 @@ export function MonthSwitcher({
             />
             <ul
               className="absolute left-0 z-40 mt-2 max-h-72 w-56 overflow-auto rounded-lg border border-border-default bg-background-card p-1.5 shadow-xl shadow-black/30"
+              ref={listRef}
               role="listbox"
             >
               {options.map((option) => {

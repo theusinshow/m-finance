@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ChevronDown } from "lucide-react";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { CreateCurrentMonthCard } from "@/components/dashboard/create-current-month-card";
 import { AlertsPanel } from "@/components/dashboard/alerts-panel";
@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { UpcomingBillsList } from "@/components/dashboard/upcoming-bills-list";
 import { BalanceDisplay } from "@/components/dashboard/balance-display";
 import { CategoryBreakdownChart } from "@/components/charts/category-breakdown-chart";
+import { TriangleMark } from "@/components/brand/triangle-mark";
 import { calculateInternalAlerts } from "@/lib/calculations/alerts";
 import { getDashboardSummary } from "@/lib/calculations/dashboard";
 import { formatCurrency } from "@/lib/formatters/currency";
@@ -149,11 +150,21 @@ export default async function DashboardPage() {
       ) : null}
 
       {currentMonth ? (
-        <details className="group rounded-xl border border-border-subtle bg-background-card/95 p-5">
-          <summary className="flex cursor-pointer items-center justify-between gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-text-muted [&::-webkit-details-marker]:hidden">
-            Receitas do mês
-            <span className="text-xs font-medium normal-case tracking-normal text-text-muted group-open:hidden">
-              {formatCurrency(summary.totalIncomeCents)} previstos · abrir
+        <details className="group rounded-xl border border-border-subtle bg-background-card/95 p-5 shadow-xl shadow-black/15">
+          <summary className="focus-ring flex cursor-pointer items-center justify-between gap-2 rounded-md text-sm font-semibold uppercase tracking-[0.16em] text-text-muted [&::-webkit-details-marker]:hidden">
+            <span className="flex items-center gap-2">
+              <TriangleMark className="shrink-0 text-accent/70" size={10} variant="solid" />
+              Receitas do mês
+            </span>
+            <span className="flex items-center gap-2 text-xs font-medium normal-case tracking-normal text-text-muted">
+              <span className="num group-open:hidden">
+                {formatCurrency(summary.totalIncomeCents)} previstos
+              </span>
+              <ChevronDown
+                aria-hidden="true"
+                className="transition-transform duration-200 group-open:rotate-180"
+                size={14}
+              />
             </span>
           </summary>
           <div className="mt-4">

@@ -1,9 +1,10 @@
 import { CreateCurrentMonthCard } from "@/components/dashboard/create-current-month-card";
 import { CardManager } from "@/components/cards/card-manager";
+import { CardFormDrawer } from "@/components/cards/card-form-drawer";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { InvoicesByCardChart } from "@/components/charts/invoices-by-card-chart";
 import { PageHeading } from "@/components/page-heading";
-import { InvoiceFormCard } from "@/components/cards/invoice-form-card";
+import { InvoiceFormDrawer } from "@/components/cards/invoice-form-drawer";
 import { InvoiceSummaryCard } from "@/components/dashboard/invoice-summary-card";
 import { requireUser } from "@/lib/auth/guard";
 import { getCreditCards, getInvoicesByMonth, getManagedCreditCards } from "@/lib/cards";
@@ -35,13 +36,16 @@ export default async function CardsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeading eyebrow="Cartões" title="Faturas simples" />
+      <PageHeading eyebrow="Cartões" title="Faturas simples">
+        <div className="flex flex-wrap items-center gap-2">
+          <CardFormDrawer />
+          {currentMonth ? <InvoiceFormDrawer cards={cards} /> : null}
+        </div>
+      </PageHeading>
 
       {!currentMonth && viewingCurrent ? <CreateCurrentMonthCard /> : null}
 
       <CardManager cards={managedCards} />
-
-      {currentMonth ? <InvoiceFormCard cards={cards} /> : null}
 
       {invoicesByCard.length > 0 ? (
         <DashboardCard description="Total de fatura por cartão neste mês." title="Faturas por cartão">

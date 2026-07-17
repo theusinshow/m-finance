@@ -107,10 +107,12 @@ export function Sidebar() {
       <div className="clip-notch brand-grid absolute bottom-5 left-4 right-4 border border-border-subtle bg-background-secondary p-4">
         <div className="flex items-center gap-2">
           <TriangleMark className="text-accent" size={12} variant="solid" />
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">MVP 1</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">
+            M Finance
+          </p>
         </div>
         <p className="mt-2 text-sm leading-5 text-text-secondary">
-          Cockpit de contas, faturas e vencimentos mensais.
+          O que pagar, o que vence, quanto sobra.
         </p>
       </div>
     </aside>

@@ -1,7 +1,5 @@
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
-import { markBillAsPaid } from "@/app/actions/bills";
-import { FormSubmitButton } from "@/components/form-submit-button";
-import { ToastForm } from "@/components/toast-form";
+import { MarkPaidButton } from "@/components/payable/mark-paid-button";
 import { InlineEmpty } from "@/components/ui/inline-empty";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/formatters/currency";
@@ -40,12 +38,9 @@ export function UpcomingBillsList({ bills }: { bills: Bill[] }) {
               <div className="flex items-center gap-2">
                 <StatusBadge status={bill.status} />
                 {bill.status !== "paid" ? (
-                  <ToastForm action={markBillAsPaid} successMessage="Conta marcada como paga.">
-                    <input name="billId" type="hidden" value={bill.id} />
-                    <FormSubmitButton pendingLabel="Marcando..." variant="secondary">
-                      Marcar como pago
-                    </FormSubmitButton>
-                  </ToastForm>
+                  <MarkPaidButton payableId={bill.id} payableType="bill" variant="secondary">
+                    Marcar como pago
+                  </MarkPaidButton>
                 ) : null}
               </div>
             </div>

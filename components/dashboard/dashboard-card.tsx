@@ -7,12 +7,15 @@ export function DashboardCard({
   title,
   description,
   accent = false,
+  action,
 }: {
   children: React.ReactNode;
   className?: string;
   title?: string;
   description?: string;
   accent?: boolean;
+  /** Conteúdo alinhado à direita do título (métricas, ações secundárias). */
+  action?: React.ReactNode;
 }) {
   return (
     <section
@@ -30,14 +33,17 @@ export function DashboardCard({
         />
       ) : null}
       {title ? (
-        <div className="mb-4">
-          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-text-muted">
-            <TriangleMark className="text-accent/70" size={10} variant="solid" />
-            {title}
-          </h2>
-          {description ? (
-            <p className="mt-1.5 text-sm leading-5 text-text-muted">{description}</p>
-          ) : null}
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-text-muted">
+              <TriangleMark className="shrink-0 text-accent/70" size={10} variant="solid" />
+              {title}
+            </h2>
+            {description ? (
+              <p className="mt-1.5 text-sm leading-5 text-text-muted">{description}</p>
+            ) : null}
+          </div>
+          {action ? <div className="shrink-0">{action}</div> : null}
         </div>
       ) : null}
       {children}
