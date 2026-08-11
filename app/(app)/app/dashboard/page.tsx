@@ -1,4 +1,5 @@
 import { CheckCircle2, ChevronDown } from "lucide-react";
+import { AttentionStrip } from "@/components/dashboard/attention-strip";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { CreateCurrentMonthCard } from "@/components/dashboard/create-current-month-card";
 import { AlertsPanel } from "@/components/dashboard/alerts-panel";
@@ -70,10 +71,52 @@ export default async function DashboardPage() {
       status: invoice.status,
     })),
   ], { daysBefore: settings?.alertDaysBefore ?? 3 });
+  const monthMetrics = [
+    {
+      label: "Receita prevista",
+      value: summary.totalIncomeCents,
+      note: `${realIncomes.length} entrada${realIncomes.length === 1 ? "" : "s"}`,
+    },
+    {
+      label: "Comprometido",
+      value: totalCommittedCents,
+      note: "Contas e faturas",
+    },
+    {
+      label: "Pago",
+      value: summary.totalPaidCents,
+      note: allSettled ? "Mês liquidado" : "Já resolvido",
+    },
+    {
+      label: "Sobra estimada",
+      value: summary.estimatedRemainingCents,
+      note: "Depois de pagar tudo",
+    },
+  ];
+  const attentionItems = [
+    ...realBills.map((bill) => ({
+      id: bill.id,
+      type: "bill" as const,
+      title: bill.name,
+      amountCents: bill.amountCents,
+      dueDate: bill.dueDate,
+      status: bill.status,
+    })),
+    ...realInvoices.map((invoice) => ({
+      id: invoice.id,
+      type: "invoice" as const,
+      title: invoice.name,
+      amountCents: invoice.amountCents,
+      dueDate: invoice.dueDate,
+      status: invoice.status,
+    })),
+  ];
 
   return (
     <div className="space-y-6">
       {!currentMonth && viewingCurrent ? <CreateCurrentMonthCard /> : null}
+
+      {currentMonth ? <AttentionStrip items={attentionItems} /> : null}
 
       <section className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
         <DashboardCard accent className="min-h-64">
@@ -120,7 +163,7 @@ export default async function DashboardPage() {
               </p>
             </div>
             <div className="flex flex-col gap-3 lg:w-72">
-              <QuickActionButton href="/app/bills" label="Adicionar despesa" />
+              <QuickActionButton href="/app/bills" label="Adicionar conta" />
               <QuickActionButton
                 href="/app/cards"
                 label="Adicionar fatura do cartão"
@@ -134,13 +177,27 @@ export default async function DashboardPage() {
         <AlertsPanel alerts={alerts} />
       </section>
 
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {monthMetrics.map((metric) => (
+          <DashboardCard className="p-4" key={metric.label}>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-text-muted">
+              {metric.label}
+            </p>
+            <p className="num mt-2 text-2xl font-semibold text-text-primary">
+              {formatCurrency(metric.value)}
+            </p>
+            <p className="mt-1 text-xs text-text-muted">{metric.note}</p>
+          </DashboardCard>
+        ))}
+      </section>
+
       <section className="grid gap-4 xl:grid-cols-[1fr_0.8fr]">
-        <UpcomingBillsList bills={realBills} />
+        <UpcomingBillsList bills={realBills} invoices={realInvoices} />
         <InvoiceSummaryCard invoices={realInvoices} />
       </section>
 
       {categoryData.length > 0 ? (
-        <DashboardCard description="Para onde as despesas do mês estão indo." title="Por categoria">
+        <DashboardCard description="Para onde as contas do mês estão indo." title="Por categoria">
           <CategoryBreakdownChart data={categoryData} />
         </DashboardCard>
       ) : null}

@@ -25,6 +25,9 @@ type Expense = {
   installmentNumber: number | null;
   installmentTotal: number | null;
 };
+type HistoryExpense = Expense & {
+  monthLabel: string;
+};
 type Invoice = {
   id: string;
   amountCents: number;
@@ -35,11 +38,13 @@ type Invoice = {
 export function CardDetail({
   card,
   expenses,
+  history,
   invoice,
   monthLabel,
 }: {
   card: Card;
   expenses: Expense[];
+  history: HistoryExpense[];
   invoice: Invoice;
   monthLabel: string;
 }) {
@@ -156,6 +161,38 @@ export function CardDetail({
                     </ToastForm>
                   ) : null}
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </DashboardCard>
+
+      <DashboardCard
+        description="Tudo que já foi lançado neste cartão, independente do mês selecionado."
+        title="Histórico do cartão"
+      >
+        {history.length === 0 ? (
+          <InlineEmpty>Nenhuma compra cadastrada neste cartão.</InlineEmpty>
+        ) : (
+          <div className="space-y-2">
+            {history.map((expense) => (
+              <div
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-background-elevated px-4 py-3"
+                key={expense.id}
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-text-primary">{expense.description}</p>
+                  <p className="mt-0.5 text-xs text-text-muted">
+                    {expense.monthLabel}
+                    {expense.installmentNumber && expense.installmentTotal
+                      ? ` · parcela ${expense.installmentNumber}/${expense.installmentTotal}`
+                      : " · à vista"}
+                    {expense.purchaseDate ? ` · ${formatShortDate(expense.purchaseDate)}` : ""}
+                  </p>
+                </div>
+                <p className="num font-semibold text-text-primary">
+                  {formatCurrency(expense.amountCents)}
+                </p>
               </div>
             ))}
           </div>

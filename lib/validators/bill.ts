@@ -18,7 +18,7 @@ export const createBillSchema = billSchema
     if (data.scheduleType === "fixed" && !data.repeatMonths) {
       context.addIssue({
         code: "custom",
-        message: "Informe por quantos meses a despesa deve se repetir.",
+        message: "Informe por quantos meses a conta deve se repetir.",
         path: ["repeatMonths"],
       });
     }

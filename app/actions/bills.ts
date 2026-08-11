@@ -90,8 +90,8 @@ export async function createBill(_prev: FormState, formData: FormData): Promise<
   revalidatePath("/app/calendar");
   return successState(
     occurrenceTotal > 1
-      ? `Despesa adicionada por ${occurrenceTotal} meses.`
-      : "Despesa adicionada.",
+      ? `Conta adicionada por ${occurrenceTotal} meses.`
+      : "Conta adicionada.",
   );
 }
 
@@ -196,7 +196,7 @@ export async function updateBill(_prev: FormState, formData: FormData): Promise<
   revalidatePath("/app/dashboard");
   revalidatePath("/app/bills");
   revalidatePath("/app/calendar");
-  return successState("Despesa atualizada.");
+  return successState("Conta atualizada.");
 }
 
 export async function deleteBill(formData: FormData) {

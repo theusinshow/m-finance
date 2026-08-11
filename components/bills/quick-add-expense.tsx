@@ -44,7 +44,7 @@ export function QuickAddExpense({
 
       <ValidatedForm
         action={createBill}
-        successMessage="Despesa adicionada."
+        successMessage="Conta adicionada."
         resetOnSuccess
         className="mt-6 border-t border-border-subtle pt-6"
       >
@@ -78,7 +78,7 @@ export function QuickAddExpense({
               className="mb-2 block text-xs font-semibold uppercase tracking-[0.14em] text-text-muted"
               htmlFor="quick-name"
             >
-              Despesa
+              Conta
             </label>
             <ValidatedInput
               autoComplete="off"
@@ -159,12 +159,12 @@ export function QuickAddExpense({
           </div>
 
           <div className="ml-auto">
-            <FormSubmitButton pendingLabel="Adicionando...">Adicionar despesa</FormSubmitButton>
+            <FormSubmitButton pendingLabel="Adicionando...">Adicionar conta</FormSubmitButton>
           </div>
         </div>
 
         <p className="mt-3 text-xs leading-5 text-text-muted">
-          Sem dia informado, a despesa vence no fim do mês. Séries começam no mês selecionado.
+          Sem dia informado, a conta vence no fim do mês. Séries começam no mês selecionado.
         </p>
       </ValidatedForm>
     </div>

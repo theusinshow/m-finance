@@ -54,7 +54,7 @@ export function MonthSwitcher({
   }
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex w-full items-center gap-1.5 md:w-auto">
       <button
         aria-label="Mês anterior"
         className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-md border border-border-subtle text-text-muted transition duration-150 hover:border-border-default hover:text-text-primary disabled:opacity-40"
@@ -65,20 +65,20 @@ export function MonthSwitcher({
         <ChevronLeft size={16} />
       </button>
 
-      <div className="relative">
+      <div className="relative min-w-0 flex-1 md:flex-none">
         <button
           aria-expanded={open}
           aria-haspopup="listbox"
-          className="focus-ring flex min-h-9 items-center gap-2 rounded-md border border-border-subtle px-3 text-left transition duration-150 hover:border-border-default"
+          className="focus-ring flex min-h-9 w-full items-center justify-between gap-2 rounded-md border border-border-subtle px-3 text-left transition duration-150 hover:border-border-default md:w-auto"
           onClick={() => setOpen((value) => !value)}
           ref={triggerRef}
           type="button"
         >
-          <span>
+          <span className="min-w-0">
             <span className="block text-[10px] font-medium uppercase tracking-[0.16em] text-text-muted">
               {active?.isCurrent ? "Mês atual" : "Mês"}
             </span>
-            <span className="block text-base font-semibold leading-tight text-text-primary">
+            <span className="block truncate text-base font-semibold leading-tight text-text-primary">
               {active?.label}
             </span>
           </span>
@@ -98,7 +98,7 @@ export function MonthSwitcher({
               type="button"
             />
             <ul
-              className="absolute left-0 z-40 mt-2 max-h-72 w-56 overflow-auto rounded-lg border border-border-default bg-background-card p-1.5 shadow-xl shadow-black/30"
+              className="absolute left-0 z-40 mt-2 max-h-72 w-full min-w-56 overflow-auto rounded-lg border border-border-default bg-background-card p-1.5 shadow-xl shadow-black/30 md:w-56"
               ref={listRef}
               role="listbox"
             >

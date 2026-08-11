@@ -22,7 +22,7 @@ const navGroups = [
     label: null,
     items: [
       { href: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/app/bills", label: "Despesas", icon: ReceiptText },
+      { href: "/app/bills", label: "Contas", icon: ReceiptText },
       { href: "/app/cards", label: "Cartões", icon: CreditCard },
       { href: "/app/calendar", label: "Calendário", icon: CalendarDays },
       { href: "/app/subscriptions", label: "Assinaturas", icon: RefreshCw },

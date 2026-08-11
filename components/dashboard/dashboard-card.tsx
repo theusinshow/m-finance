@@ -20,7 +20,7 @@ export function DashboardCard({
   return (
     <section
       className={cn(
-        "relative rounded-xl border border-border-subtle bg-background-card/95 p-5 shadow-xl shadow-black/15 ring-1 ring-white/[0.02] transition duration-300 hover:border-border-default hover:shadow-2xl hover:shadow-black/25",
+        "relative rounded-xl border border-border-subtle bg-background-card/95 p-4 shadow-lg shadow-black/10 ring-1 ring-white/[0.02] transition duration-200 hover:border-border-default sm:p-5",
         accent && "clip-notch-lg",
         className,
       )}
@@ -33,7 +33,7 @@ export function DashboardCard({
         />
       ) : null}
       {title ? (
-        <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="min-w-0">
             <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-text-muted">
               <TriangleMark className="shrink-0 text-accent/70" size={10} variant="solid" />

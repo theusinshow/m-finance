@@ -68,7 +68,7 @@ export function MarkPaidButton({
     <button
       aria-busy={pending}
       className={cn(
-        "clip-notch sheen group focus-ring relative inline-flex min-h-11 items-center justify-center gap-2 px-4 text-sm font-semibold tracking-tight transition duration-200 disabled:cursor-wait disabled:opacity-75",
+        "clip-notch sheen group focus-ring relative inline-flex min-h-11 w-full items-center justify-center gap-2 px-4 text-sm font-semibold tracking-tight transition duration-200 disabled:cursor-wait disabled:opacity-75 sm:w-auto",
         variant === "secondary" &&
           "border border-border-default bg-background-elevated text-text-secondary hover:border-border-strong hover:bg-background-hover hover:text-text-primary active:scale-[0.985]",
         variant === "success" &&

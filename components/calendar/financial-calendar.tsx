@@ -51,8 +51,22 @@ export function FinancialCalendar({
     eventsByDay.set(event.day, list);
   }
 
+  const weekEvents = events.filter((event) => {
+    if (todayDay < 1) return false;
+    return event.status !== "paid" && event.day >= todayDay && event.day <= todayDay + 7;
+  });
   const visibleEvents =
-    selectedDay === null ? events : (eventsByDay.get(selectedDay) ?? []);
+    selectedDay === null
+      ? weekEvents.length > 0
+        ? weekEvents
+        : events.filter((event) => event.status !== "paid")
+      : (eventsByDay.get(selectedDay) ?? []);
+  const panelTitle =
+    selectedDay === null
+      ? weekEvents.length > 0
+        ? "Hoje e próximos 7 dias"
+        : "Pendências do mês"
+      : `Dia ${selectedDay}`;
 
   return (
     <section className="grid gap-4 xl:grid-cols-[1fr_380px]">
@@ -165,13 +179,13 @@ export function FinancialCalendar({
             </button>
           ) : undefined
         }
-        title={selectedDay === null ? "Eventos do mês" : `Dia ${selectedDay}`}
+        title={panelTitle}
       >
         <div className="space-y-3">
           {visibleEvents.length === 0 ? (
             <InlineEmpty>
               {selectedDay === null
-                ? "Nenhum vencimento cadastrado para este mês."
+                ? "Nenhum vencimento em aberto para este mês."
                 : "Nada vence neste dia."}
             </InlineEmpty>
           ) : (

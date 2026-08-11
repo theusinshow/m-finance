@@ -23,9 +23,9 @@ export function Topbar({
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <MonthSwitcher activeValue={activeMonthValue} options={monthOptions} />
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2 md:justify-end">
           <NotificationsBell items={notifications.items} unreadCount={notifications.unreadCount} />
-          <div className="flex min-h-11 items-center gap-3 rounded-md border border-border-subtle bg-background-secondary px-3 py-2">
+          <div className="flex min-h-11 items-center gap-3 rounded-md border border-border-subtle bg-background-secondary px-2.5 py-2 sm:px-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-background-elevated text-xs font-semibold text-text-secondary">
               {user.email?.charAt(0).toUpperCase() ?? "M"}
             </div>
