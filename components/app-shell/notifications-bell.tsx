@@ -81,7 +81,7 @@ export function NotificationsBell({
           />
           <div
             aria-label="Notificações"
-            className="absolute right-0 z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-border-default bg-background-card shadow-xl shadow-black/30 outline-none"
+            className="absolute left-0 md:left-auto md:right-0 z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-border-default bg-background-card shadow-xl shadow-black/30 outline-none"
             ref={panelRef}
             role="dialog"
             tabIndex={-1}
